@@ -55,6 +55,26 @@
 </p>
 
 <!--START_SECTION:chessStats-->
+<!-- Automatically generated with https://github.com/Balastrong/chess-stats-action -->
+
+| Type | Rapid ⏲️ | Blitz ⚡ | Bullet 🔫 |
+|:---:|:---:|:---:|:---:|
+| Current | 1216 | 584 | 704 |
+| Best | 1232 | 746 | 741 |
+
+| White ⚪ | Black ⚫ | Result 🏆 | Date 📅 | Position 🗺️ | Type 🕕 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| **ashumm** | trev-vor | resigned ❌ | 17/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=rn1qkbnr/ppp1pppp/8/3p1b2/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3">Link</a> | Rapid |
+| **ashumm** | Uchenikkkk | win 🥇 | 17/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=r5r1/1p6/p1n1Q3/6pk/8/7R/PPP1N1PP/2K5 b - - 2 29">Link</a> | Rapid |
+| cexmusic | **ashumm** | win 🥇 | 17/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=2bkr3/3p2pp/r2B4/p1p5/8/1PP5/P2N1PPP/4R1K1 w - - 0 22">Link</a> | Rapid |
+| Eergerg34 | **ashumm** | checkmated ❌ | 17/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=r4br1/p3k2p/3ppQ2/1B1p4/3Pb3/B3P3/P5PP/R4RK1 b - - 0 20">Link</a> | Rapid |
+| **ashumm** | Marya_3 | resigned ❌ | 17/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=8/5pK1/4b1p1/p6p/2k4P/P7/1P6/8 w - - 1 48">Link</a> | Rapid |
+| **ashumm** | AM37NL | checkmated ❌ | 17/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=6k1/5p1p/8/7p/8/8/1r6/2q2K2 w - - 4 48">Link</a> | Rapid |
+| **ashumm** | jrs2k23 | win 🥇 | 16/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=8/3R4/5k2/4p3/1pP5/1P1B4/PK6/8 b - - 0 41">Link</a> | Rapid |
+| Ian1000000 | **ashumm** | win 🥇 | 16/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=r3r1k1/pp3p1p/2n3p1/2q3B1/7P/5P2/PP3P2/R4NK1 w - - 0 24">Link</a> | Rapid |
+| aamri | **ashumm** | win 🥇 | 16/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=8/8/8/q7/5k2/8/1r6/r4K2 w - - 8 76">Link</a> | Rapid |
+| **ashumm** | Peterspeed77 | win 🥇 | 14/9/2026 | <a href="http://www.ee.unb.ca/cgi-bin/tervo/fen.pl?select=4r1k1/p1p1q1p1/2p5/7p/2P1pQN1/8/PP3PP1/R4RK1 b - - 0 26">Link</a> | Rapid |
+
 <!--END_SECTION:chessStats-->
 
 ---
