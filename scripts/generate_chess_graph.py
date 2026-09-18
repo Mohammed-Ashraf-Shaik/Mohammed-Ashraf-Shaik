@@ -128,13 +128,11 @@ def main():
     start_y = get_y(r_start)
 
     # Calculate callout positions to completely prevent overlap:
-    # Peak callout placed above-left
     peak_box_w = 100
     peak_box_h = 24
     peak_box_x = max(m_left + 10, min(peak_x - 110, svg_w - peak_box_w - 20))
     peak_box_y = max(m_top - 15, peak_y - 45)
 
-    # Current callout placed below-left with ample vertical separation
     curr_box_w = 92
     curr_box_h = 24
     curr_box_x = max(m_left + 10, min(curr_x - 105, svg_w - curr_box_w - 20))
@@ -159,10 +157,14 @@ def main():
         <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
             <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4" />
         </filter>
-        <!-- Wave Reveal ClipPath -->
+        <!-- Periodic Wave Reveal ClipPath with Stable Hold -->
         <clipPath id="waveClip">
             <rect x="0" y="0" width="{svg_w}" height="{svg_h}">
-                <animate attributeName="width" from="0" to="{svg_w}" dur="2.8s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1" keyTimes="0;1" />
+                <animate attributeName="width" dur="7.5s" repeatCount="indefinite"
+                    keyTimes="0; 0.35; 0.85; 0.94; 1"
+                    values="0; {svg_w}; {svg_w}; 0; 0"
+                    keySplines="0.22 1 0.36 1; 0 0 1 1; 0.22 1 0.36 1; 0 0 1 1"
+                    calcMode="spline" />
             </rect>
         </clipPath>
     </defs>
@@ -173,49 +175,74 @@ def main():
         .badge-title {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; fill: #8b949e; letter-spacing: 0.5px; }}
         .badge-value {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 800; }}
         
-        /* Wave Drawing Animation */
+        /* Continuous Waveform Sweep with 4s Stable Hold */
         .wave-line {{
             stroke-dasharray: 4500;
             stroke-dashoffset: 4500;
-            animation: drawWave 2.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: drawWave 7.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
         }}
         @keyframes drawWave {{
-            0% {{ stroke-dashoffset: 4500; }}
-            100% {{ stroke-dashoffset: 0; }}
+            0% {{ stroke-dashoffset: 4500; opacity: 1; }}
+            35% {{ stroke-dashoffset: 0; opacity: 1; }}
+            85% {{ stroke-dashoffset: 0; opacity: 1; }}
+            92% {{ opacity: 0; }}
+            96% {{ stroke-dashoffset: 4500; opacity: 0; }}
+            100% {{ stroke-dashoffset: 4500; opacity: 1; }}
         }}
 
         /* Wave Gradient Area Fill */
         .wave-area {{
-            opacity: 0;
-            animation: fadeInArea 1.8s ease-out 1.0s forwards;
+            animation: fadeArea 7.5s ease-out infinite;
         }}
-        @keyframes fadeInArea {{
+        @keyframes fadeArea {{
             0% {{ opacity: 0; }}
-            100% {{ opacity: 1; }}
+            15% {{ opacity: 0; }}
+            35% {{ opacity: 1; }}
+            85% {{ opacity: 1; }}
+            92% {{ opacity: 0; }}
+            100% {{ opacity: 0; }}
         }}
 
         /* Staggered Milestone Markers */
         .marker-start {{
-            opacity: 0;
-            animation: popMarker 0.4s ease-out 0.2s forwards;
+            animation: fadeStart 7.5s ease-out infinite;
         }}
+        @keyframes fadeStart {{
+            0% {{ opacity: 0; }}
+            5% {{ opacity: 1; }}
+            85% {{ opacity: 1; }}
+            92% {{ opacity: 0; }}
+            100% {{ opacity: 0; }}
+        }}
+
         .marker-peak {{
-            opacity: 0;
-            animation: popMarker 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 2.2s forwards;
+            animation: fadePeak 7.5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
         }}
+        @keyframes fadePeak {{
+            0% {{ opacity: 0; transform: scale(0.7); }}
+            28% {{ opacity: 0; transform: scale(0.7); }}
+            34% {{ opacity: 1; transform: scale(1); }}
+            85% {{ opacity: 1; transform: scale(1); }}
+            92% {{ opacity: 0; }}
+            100% {{ opacity: 0; }}
+        }}
+
         .marker-curr {{
-            opacity: 0;
-            animation: popMarker 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 2.6s forwards;
+            animation: fadeCurr 7.5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
         }}
-        @keyframes popMarker {{
-            0% {{ opacity: 0; transform: scale(0.6); }}
-            100% {{ opacity: 1; transform: scale(1); }}
+        @keyframes fadeCurr {{
+            0% {{ opacity: 0; transform: scale(0.7); }}
+            30% {{ opacity: 0; transform: scale(0.7); }}
+            36% {{ opacity: 1; transform: scale(1); }}
+            85% {{ opacity: 1; transform: scale(1); }}
+            92% {{ opacity: 0; }}
+            100% {{ opacity: 0; }}
         }}
 
         /* Live Radar Beacon Pulse */
         .live-pulse {{
             transform-origin: {curr_x:.1f}px {curr_y:.1f}px;
-            animation: pulse 2s ease-out infinite 2.8s;
+            animation: pulse 2s ease-out infinite;
         }}
         @keyframes pulse {{
             0% {{ r: 5px; opacity: 0.9; }}
@@ -269,7 +296,10 @@ def main():
     <!-- Baseline Axis -->
     <line x1="{m_left}" y1="{bottom_y}" x2="{m_left + chart_w}" y2="{bottom_y}" stroke="#30363d" stroke-width="1.2" />
 
-    <!-- Wave Graph Container with Clip-Path Reveal -->
+    <!-- Subtle Guide Trace (Always Visible Underneath) -->
+    <path d="{line_path}" fill="none" stroke="#213524" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.45" />
+
+    <!-- Dynamic Wave Graph Container with Clip-Path Reveal -->
     <g clip-path="url(#waveClip)">
         <!-- Area Gradient Fill -->
         <path class="wave-area" d="{area_path}" fill="url(#chartGradient)" />
