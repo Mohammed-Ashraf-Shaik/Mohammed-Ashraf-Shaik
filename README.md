@@ -100,9 +100,13 @@
 ## 📈 GitHub Activity & Stats
 
 <p align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=Mohammed-Ashraf-Shaik&show_icons=true&theme=tokyonight&hide_border=true" alt="Mohammad Ashraf Shaik GitHub Stats" height="175" />
+  <img src="https://github-readme-stats-fast.vercel.app/api?username=Mohammed-Ashraf-Shaik&show_icons=true&theme=tokyonight&hide_border=true" alt="Mohammad Ashraf Shaik GitHub Stats" height="175" />
   &nbsp;
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Mohammed-Ashraf-Shaik&layout=compact&theme=tokyonight&hide_border=true" alt="Top Languages" height="175" />
+  <img src="https://github-readme-stats-fast.vercel.app/api/top-langs/?username=Mohammed-Ashraf-Shaik&layout=compact&theme=tokyonight&hide_border=true" alt="Top Languages" height="175" />
+</p>
+
+<p align="center">
+  <img src="https://streak-stats.demolab.com/?user=Mohammed-Ashraf-Shaik&theme=tokyonight&hide_border=true" alt="GitHub Streak Stats" />
 </p>
 
 ---
