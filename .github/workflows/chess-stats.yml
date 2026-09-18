@@ -1,4 +1,4 @@
-name: Chess.com Stats Action
+name: Update Chess Rating Graph
 
 on:
   schedule:
@@ -6,16 +6,26 @@ on:
   workflow_dispatch: # Allows manual run anytime
 
 jobs:
-  update-readme:
-    name: Update README with latest Chess.com stats
+  update-graph:
+    name: Generate Chess.com Rating Graph
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Fetch and inject Chess.com stats
-        uses: Balastrong/chess-stats-action@main
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          CHESS_USERNAME: ashumm
+          python-version: '3.11'
+
+      - name: Run Graph Generator
+        run: python scripts/generate_chess_graph.py
+
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add chess_rating_graph.svg
+          git diff --staged --quiet || (git commit -m "chore(chess): update all-time rating progression graph [skip ci]" && git push)
