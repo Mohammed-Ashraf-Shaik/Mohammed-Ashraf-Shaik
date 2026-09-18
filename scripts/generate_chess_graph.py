@@ -107,7 +107,7 @@ def main():
         <text x="{m_left - 12}" y="{y_pos + 4:.1f}" text-anchor="end" fill="#768390" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="11" font-weight="600">{val}</text>
         """)
 
-    # Date Grid Lines (X-Axis) - generate 6-7 intervals across time span
+    # Date Grid Lines (X-Axis) - generate 6 intervals across time span
     x_grid_lines = []
     num_ticks = 6
     for step in range(num_ticks + 1):
@@ -127,6 +127,19 @@ def main():
     start_x = get_x(timestamps[0])
     start_y = get_y(r_start)
 
+    # Calculate callout positions to completely prevent overlap:
+    # Peak callout placed above-left
+    peak_box_w = 100
+    peak_box_h = 24
+    peak_box_x = max(m_left + 10, min(peak_x - 110, svg_w - peak_box_w - 20))
+    peak_box_y = max(m_top - 15, peak_y - 45)
+
+    # Current callout placed below-left with ample vertical separation
+    curr_box_w = 92
+    curr_box_h = 24
+    curr_box_x = max(m_left + 10, min(curr_x - 105, svg_w - curr_box_w - 20))
+    curr_box_y = min(bottom_y - 30, curr_y + 35)
+
     svg_content = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {svg_w} {svg_h}" width="100%" height="100%">
     <defs>
         <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -139,26 +152,75 @@ def main():
             <stop offset="50%" stop-color="#81b64c" />
             <stop offset="100%" stop-color="#a3d160" />
         </linearGradient>
-        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
         <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
-            <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.35" />
+            <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4" />
         </filter>
+        <!-- Wave Reveal ClipPath -->
+        <clipPath id="waveClip">
+            <rect x="0" y="0" width="{svg_w}" height="{svg_h}">
+                <animate attributeName="width" from="0" to="{svg_w}" dur="2.8s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1" keyTimes="0;1" />
+            </rect>
+        </clipPath>
     </defs>
 
     <style>
         .title {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 700; font-size: 17px; fill: #f0f6fc; }}
         .subtitle {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 500; font-size: 12px; fill: #8b949e; }}
-        .badge-card {{ rx: 8px; }}
         .badge-title {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; fill: #8b949e; letter-spacing: 0.5px; }}
         .badge-value {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 800; }}
-        .pulse-dot {{ animation: pulse 2s infinite; }}
+        
+        /* Wave Drawing Animation */
+        .wave-line {{
+            stroke-dasharray: 4500;
+            stroke-dashoffset: 4500;
+            animation: drawWave 2.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }}
+        @keyframes drawWave {{
+            0% {{ stroke-dashoffset: 4500; }}
+            100% {{ stroke-dashoffset: 0; }}
+        }}
+
+        /* Wave Gradient Area Fill */
+        .wave-area {{
+            opacity: 0;
+            animation: fadeInArea 1.8s ease-out 1.0s forwards;
+        }}
+        @keyframes fadeInArea {{
+            0% {{ opacity: 0; }}
+            100% {{ opacity: 1; }}
+        }}
+
+        /* Staggered Milestone Markers */
+        .marker-start {{
+            opacity: 0;
+            animation: popMarker 0.4s ease-out 0.2s forwards;
+        }}
+        .marker-peak {{
+            opacity: 0;
+            animation: popMarker 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 2.2s forwards;
+        }}
+        .marker-curr {{
+            opacity: 0;
+            animation: popMarker 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 2.6s forwards;
+        }}
+        @keyframes popMarker {{
+            0% {{ opacity: 0; transform: scale(0.6); }}
+            100% {{ opacity: 1; transform: scale(1); }}
+        }}
+
+        /* Live Radar Beacon Pulse */
+        .live-pulse {{
+            transform-origin: {curr_x:.1f}px {curr_y:.1f}px;
+            animation: pulse 2s ease-out infinite 2.8s;
+        }}
         @keyframes pulse {{
-            0% {{ r: 5px; opacity: 1; }}
-            50% {{ r: 10px; opacity: 0.3; }}
-            100% {{ r: 5px; opacity: 1; }}
+            0% {{ r: 5px; opacity: 0.9; }}
+            50% {{ r: 13px; opacity: 0.25; }}
+            100% {{ r: 18px; opacity: 0; }}
         }}
     </style>
 
@@ -207,27 +269,47 @@ def main():
     <!-- Baseline Axis -->
     <line x1="{m_left}" y1="{bottom_y}" x2="{m_left + chart_w}" y2="{bottom_y}" stroke="#30363d" stroke-width="1.2" />
 
-    <!-- Area Gradient Fill -->
-    <path d="{area_path}" fill="url(#chartGradient)" />
+    <!-- Wave Graph Container with Clip-Path Reveal -->
+    <g clip-path="url(#waveClip)">
+        <!-- Area Gradient Fill -->
+        <path class="wave-area" d="{area_path}" fill="url(#chartGradient)" />
 
-    <!-- Rating Trajectory Line -->
-    <path d="{line_path}" fill="none" stroke="url(#lineGradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        <!-- Rating Trajectory Wave Line -->
+        <path class="wave-line" d="{line_path}" fill="none" stroke="url(#lineGradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
 
-    <!-- Start Point Indicator -->
-    <circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="4.5" fill="#4e8d35" stroke="#0d1117" stroke-width="2" />
-    <rect x="{start_x + 6:.1f}" y="{start_y - 12:.1f}" width="70" height="20" rx="4" fill="#161b22" stroke="#30363d" />
-    <text x="{start_x + 12:.1f}" y="{start_y + 2:.1f}" fill="#8b949e" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="10" font-weight="700">Start: {r_start}</text>
+    <!-- ==================== MILESTONE MARKERS (NO OVERLAP) ==================== -->
 
-    <!-- Peak Point Indicator -->
-    <circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="6" fill="#f1e05a" stroke="#0d1117" stroke-width="2.5" filter="url(#glow)" />
-    <rect x="{peak_x - 48:.1f}" y="{peak_y - 28:.1f}" width="96" height="22" rx="4" fill="#161b22" stroke="#f1e05a" stroke-width="1.2" />
-    <text x="{peak_x:.1f}" y="{peak_y - 14:.1f}" text-anchor="middle" fill="#f1e05a" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="11" font-weight="800">Peak: {r_peak} 🏆</text>
+    <!-- 1. Start Point Indicator -->
+    <g class="marker-start">
+        <circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="4.5" fill="#4e8d35" stroke="#0d1117" stroke-width="2" />
+        <rect x="{start_x + 8:.1f}" y="{start_y - 12:.1f}" width="72" height="22" rx="5" fill="#161b22" stroke="#30363d" stroke-width="1" />
+        <text x="{start_x + 14:.1f}" y="{start_y + 3:.1f}" fill="#8b949e" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="10" font-weight="700">Start: {r_start}</text>
+    </g>
 
-    <!-- Current Point Indicator -->
-    <circle cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="8" fill="#81b64c" fill-opacity="0.3" class="pulse-dot" />
-    <circle cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="5" fill="#a3d160" stroke="#0d1117" stroke-width="2" filter="url(#glow)" />
-    <rect x="{curr_x - 88:.1f}" y="{curr_y - 26:.1f}" width="82" height="20" rx="4" fill="#161b22" stroke="#81b64c" stroke-width="1.2" />
-    <text x="{curr_x - 47:.1f}" y="{curr_y - 12:.1f}" text-anchor="middle" fill="#a3d160" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800">Now: {r_curr}</text>
+    <!-- 2. Peak Point Indicator (Positioned ABOVE-LEFT with Gold Pin Line) -->
+    <g class="marker-peak">
+        <!-- Connecting leader line -->
+        <line x1="{peak_box_x + peak_box_w:.1f}" y1="{peak_box_y + peak_box_h:.1f}" x2="{peak_x:.1f}" y2="{peak_y:.1f}" stroke="#f1e05a" stroke-width="1.2" stroke-dasharray="2 2" />
+        <!-- Glowing peak point -->
+        <circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="6.5" fill="#f1e05a" stroke="#0d1117" stroke-width="2.5" filter="url(#glow)" />
+        <!-- Badge Box -->
+        <rect x="{peak_box_x:.1f}" y="{peak_box_y:.1f}" width="{peak_box_w}" height="{peak_box_h}" rx="6" fill="#1f1e14" stroke="#f1e05a" stroke-width="1.4" filter="url(#cardShadow)" />
+        <text x="{peak_box_x + (peak_box_w / 2):.1f}" y="{peak_box_y + 16:.1f}" text-anchor="middle" fill="#f1e05a" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="11" font-weight="800">Peak: {r_peak} 🏆</text>
+    </g>
+
+    <!-- 3. Current Point Indicator (Positioned BELOW-LEFT with Emerald Pin Line) -->
+    <g class="marker-curr">
+        <!-- Pulse ring behind point -->
+        <circle class="live-pulse" cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="6" fill="#81b64c" />
+        <!-- Connecting leader line -->
+        <line x1="{curr_box_x + curr_box_w:.1f}" y1="{curr_box_y:.1f}" x2="{curr_x:.1f}" y2="{curr_y:.1f}" stroke="#81b64c" stroke-width="1.2" stroke-dasharray="2 2" />
+        <!-- Current point dot -->
+        <circle cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="5.5" fill="#a3d160" stroke="#0d1117" stroke-width="2" filter="url(#glow)" />
+        <!-- Badge Box -->
+        <rect x="{curr_box_x:.1f}" y="{curr_box_y:.1f}" width="{curr_box_w}" height="{curr_box_h}" rx="6" fill="#102419" stroke="#81b64c" stroke-width="1.4" filter="url(#cardShadow)" />
+        <text x="{curr_box_x + (curr_box_w / 2):.1f}" y="{curr_box_y + 16:.1f}" text-anchor="middle" fill="#a3d160" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="11" font-weight="800">Now: {r_curr}</text>
+    </g>
 </svg>"""
 
     output_path = os.path.join(os.path.dirname(__file__), "..", "chess_rating_graph.svg")
