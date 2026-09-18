@@ -53,9 +53,16 @@
     <img src="https://img.shields.io/badge/League-Legend-9b59b6?style=for-the-badge&logo=chess.com&logoColor=white" alt="Chess League" />
   </a>
 </p>
+
 <p align="center">
-  <a href="https://www.chess.com/member/ashumm" target="_blank">
-    <img src="chess_rating_graph.svg" alt="Chess.com All-Time Rating Progression Graph" width="100%" />
+  <a href="https://mohammed-ashraf-shaik.github.io/Mohammed-Ashraf-Shaik/" target="_blank">
+    <img src="https://img.shields.io/badge/🎮_Live_Interactive_Dashboard-Scroll_Waves_%26_Mouse_Hover_Tooltips-81b64c?style=for-the-badge&logo=chess.com&logoColor=white" alt="Interactive Dashboard" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://mohammed-ashraf-shaik.github.io/Mohammed-Ashraf-Shaik/" target="_blank">
+    <img src="chess_rating_graph.svg?v=3" alt="Chess.com All-Time Rating Progression Graph" width="100%" />
   </a>
 </p>
 

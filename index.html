@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mohammad Ashraf Shaik (@ashumm) — Interactive Chess Rating Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --text: #f0f6fc;
+      --text-muted: #8b949e;
+      --green: #81b64c;
+      --green-glow: rgba(129, 182, 76, 0.35);
+      --gold: #f1e05a;
+      --blue: #58a6ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px;
+      overflow-x: hidden;
+    }
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    /* Header */
+    .header-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      border: 2px solid var(--green);
+      box-shadow: 0 0 16px var(--green-glow);
+    }
+    .user-text h1 {
+      font-size: 22px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-link:hover {
+      background: #30363d;
+      border-color: var(--green);
+      color: #fff;
+    }
+    /* KPI Stats Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--green);
+    }
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+    .kpi-val {
+      font-size: 26px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Chart Card */
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    }
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .chart-title {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      background: #0d1117;
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .filter-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--green);
+      color: #0d1117;
+      font-weight: 700;
+    }
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 420px;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+    /* Tooltip */
+    #chart-tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      background: rgba(22, 27, 34, 0.95);
+      border: 1px solid var(--green);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      transform: translate(-50%, -120%);
+      transition: opacity 0.15s ease;
+      min-width: 150px;
+    }
+    .tooltip-date { color: var(--text-muted); font-size: 11px; margin-bottom: 4px; }
+    .tooltip-rating { font-size: 18px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--green); }
+    .tooltip-opp { margin-top: 4px; color: var(--text); font-size: 12px; }
+    .tooltip-res { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-top: 4px; }
+    .res-win { background: rgba(129, 182, 76, 0.2); color: var(--green); }
+    .res-loss { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header Card -->
+  <div class="header-card">
+    <div class="user-info">
+      <img src="https://images.chesscomfiles.com/uploads/v1/user/402638381.71fd0326.200x200o.1a9c7addae49.jpg" alt="Mohammad Ashraf Shaik" class="avatar">
+      <div class="user-text">
+        <h1>Mohammad Ashraf Shaik <span style="font-size: 14px; background: rgba(155, 89, 182, 0.2); color: #9b59b6; border: 1px solid #9b59b6; border-radius: 6px; padding: 2px 8px;">Legend League</span></h1>
+        <p>Chess.com Player: <b>@ashumm</b> • Real-Time Interactive Rating Tracker</p>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="https://github.com/Mohammed-Ashraf-Shaik" class="btn-link" target="_blank"><i class="fa-brands fa-github"></i> GitHub Profile</a>
+      <a href="https://www.chess.com/member/ashumm" class="btn-link" target="_blank" style="border-color: var(--green); color: var(--green);"><i class="fa-solid fa-chess-knight"></i> Chess.com</a>
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">Current Rapid Rating</span>
+      <span class="kpi-val" style="color: var(--green);" id="kpi-current">1,216</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">All-Time Peak Rating</span>
+      <span class="kpi-val" style="color: var(--gold);" id="kpi-peak">1,232 🏆</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">All-Time Rating Gain</span>
+      <span class="kpi-val" style="color: var(--blue);" id="kpi-gain">+978 📈</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Total Rapid Matches</span>
+      <span class="kpi-val" style="color: #f0f6fc;" id="kpi-games">2,227</span>
+    </div>
+  </div>
+
+  <!-- Interactive Chart Card -->
+  <div class="chart-card" id="chart-section">
+    <div class="chart-header">
+      <div class="chart-title">
+        <i class="fa-solid fa-chart-line" style="color: var(--green);"></i>
+        <span>Rating Progression (Wave & Hover Enabled)</span>
+      </div>
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="setFilter('all')">All Time</button>
+        <button class="filter-btn" onclick="setFilter('500')">Last 500</button>
+        <button class="filter-btn" onclick="setFilter('100')">Last 100</button>
+        <button class="filter-btn" onclick="setFilter('30')">Last 30</button>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="chessCanvas"></canvas>
+      <div id="chart-tooltip">
+        <div class="tooltip-date" id="tt-date">Sep 17, 2026</div>
+        <div class="tooltip-rating" id="tt-rating">1216</div>
+        <div class="tooltip-opp" id="tt-opp">vs trev-vor</div>
+        <div class="tooltip-res res-win" id="tt-res">WIN 🥇</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">
+    💡 <b>Interactive Mode</b>: Hover or drag your mouse across the curve to inspect individual matches. Scroll up/down to re-trigger the smooth wave-draw animation.
+  </p>
+</div>
+
+<script>
+let fullData = [];
+let activePoints = [];
+let progress = 0; // 0 to 1 wave animation progress
+let animationId = null;
+const canvas = document.getElementById('chessCanvas');
+const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('chart-tooltip');
+
+const margin = { top: 30, right: 30, bottom: 40, left: 60 };
+let hoveredIdx = null;
+
+// Fetch JSON data
+fetch('chess_data.json')
+  .then(res => res.json())
+  .then(data => {
+    fullData = data.points;
+    setFilter('all');
+    setupScrollObserver();
+  })
+  .catch(err => {
+    console.error('Failed to load chess data:', err);
+  });
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  drawChart();
+});
+
+function setFilter(filter) {
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(filter));
+  });
+
+  if (filter === 'all') activePoints = [...fullData];
+  else if (filter === '500') activePoints = fullData.slice(-500);
+  else if (filter === '100') activePoints = fullData.slice(-100);
+  else if (filter === '30') activePoints = fullData.slice(-30);
+
+  triggerWaveAnimation();
+}
+
+function triggerWaveAnimation() {
+  cancelAnimationFrame(animationId);
+  progress = 0;
+  const startTime = performance.now();
+  const duration = 2000; // 2 seconds wave draw
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    progress = Math.min(1, elapsed / duration);
+    // Cubic bezier ease-out
+    progress = 1 - Math.pow(1 - progress, 3);
+    drawChart();
+
+    if (progress < 1) {
+      animationId = requestAnimationFrame(animate);
+    }
+  }
+  animationId = requestAnimationFrame(animate);
+}
+
+// Re-trigger wave animation on scroll into view
+function setupScrollObserver() {
+  resizeCanvas();
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        triggerWaveAnimation();
+      }
+    });
+  }, { threshold: 0.25 });
+
+  observer.observe(document.getElementById('chart-section'));
+}
+
+function drawChart() {
+  const width = canvas.getBoundingClientRect().width;
+  const height = canvas.getBoundingClientRect().height;
+
+  ctx.clearRect(0, 0, width, height);
+
+  if (!activePoints.length) return;
+
+  const chartW = width - margin.left - margin.right;
+  const chartH = height - margin.top - margin.bottom;
+
+  const ratings = activePoints.map(p => p.r);
+  const minR = Math.floor(Math.min(...ratings) / 100) * 100;
+  const maxR = Math.ceil(Math.max(...ratings) / 100) * 100;
+
+  function getX(index) {
+    return margin.left + (index / (activePoints.length - 1)) * chartW;
+  }
+  function getY(r) {
+    return (margin.top + chartH) - ((r - minR) / (maxR - minR)) * chartH;
+  }
+
+  // Draw Grid Lines & Y-Labels
+  ctx.strokeStyle = '#21262d';
+  ctx.fillStyle = '#8b949e';
+  ctx.font = '11px JetBrains Mono';
+  ctx.textAlign = 'right';
+
+  const step = Math.max(100, Math.round((maxR - minR) / 5));
+  for (let val = minR; val <= maxR; val += step) {
+    const y = getY(val);
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.moveTo(margin.left, y);
+    ctx.lineTo(margin.left + chartW, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillText(val, margin.left - 12, y + 4);
+  }
+
+  // Baseline
+  ctx.beginPath();
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 1.5;
+  ctx.moveTo(margin.left, margin.top + chartH);
+  ctx.lineTo(margin.left + chartW, margin.top + chartH);
+  ctx.stroke();
+
+  // Draw Wave Path
+  const visibleCount = Math.max(2, Math.floor(activePoints.length * progress));
+
+  // Area Fill
+  const gradient = ctx.createLinearGradient(0, margin.top, 0, margin.top + chartH);
+  gradient.addColorStop(0, 'rgba(129, 182, 76, 0.45)');
+  gradient.addColorStop(0.7, 'rgba(129, 182, 76, 0.08)');
+  gradient.addColorStop(1, 'rgba(129, 182, 76, 0)');
+
+  ctx.beginPath();
+  ctx.moveTo(getX(0), margin.top + chartH);
+  for (let i = 0; i < visibleCount; i++) {
+    ctx.lineTo(getX(i), getY(activePoints[i].r));
+  }
+  ctx.lineTo(getX(visibleCount - 1), margin.top + chartH);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  // Line Stroke
+  const lineGrad = ctx.createLinearGradient(margin.left, 0, margin.left + chartW, 0);
+  lineGrad.addColorStop(0, '#4e8d35');
+  lineGrad.addColorStop(0.5, '#81b64c');
+  lineGrad.addColorStop(1, '#a3d160');
+
+  ctx.beginPath();
+  ctx.lineWidth = 2.8;
+  ctx.strokeStyle = lineGrad;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  for (let i = 0; i < visibleCount; i++) {
+    const x = getX(i);
+    const y = getY(activePoints[i].r);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Draw Leading Wave Dot
+  if (visibleCount > 0 && progress < 1) {
+    const lastX = getX(visibleCount - 1);
+    const lastY = getY(activePoints[visibleCount - 1].r);
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#f1e05a';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Draw Hover Point & Crosshair
+  if (hoveredIdx !== null && hoveredIdx < visibleCount) {
+    const hX = getX(hoveredIdx);
+    const hY = getY(activePoints[hoveredIdx].r);
+
+    // Crosshair line
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(129, 182, 76, 0.4)';
+    ctx.setLineDash([3, 3]);
+    ctx.moveTo(hX, margin.top);
+    ctx.lineTo(hX, margin.top + chartH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Glowing Dot
+    ctx.beginPath();
+    ctx.arc(hX, hY, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#81b64c';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+}
+
+// Hover Interaction
+canvas.addEventListener('mousemove', (e) => {
+  if (!activePoints.length) return;
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const chartW = rect.width - margin.left - margin.right;
+
+  if (mouseX < margin.left || mouseX > margin.left + chartW) {
+    tooltip.style.display = 'none';
+    hoveredIdx = null;
+    drawChart();
+    return;
+  }
+
+  const ratio = (mouseX - margin.left) / chartW;
+  hoveredIdx = Math.min(activePoints.length - 1, Math.max(0, Math.round(ratio * (activePoints.length - 1))));
+  const p = activePoints[hoveredIdx];
+
+  // Tooltip content
+  const dt = new Date(p.t * 1000);
+  document.getElementById('tt-date').innerText = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  document.getElementById('tt-rating').innerText = p.r;
+  document.getElementById('tt-opp').innerText = 'vs ' + (p.opp || 'Opponent');
+
+  const isWin = p.res && (p.res.includes('win') || p.res.includes('1'));
+  const ttRes = document.getElementById('tt-res');
+  ttRes.className = 'tooltip-res ' + (isWin ? 'res-win' : 'res-loss');
+  ttRes.innerText = isWin ? 'WIN 🥇' : (p.res ? p.res.toUpperCase() : 'GAME');
+
+  tooltip.style.display = 'block';
+  tooltip.style.left = (margin.left + (hoveredIdx / (activePoints.length - 1)) * chartW) + 'px';
+  const chartH = rect.height - margin.top - margin.bottom;
+  const ratings = activePoints.map(x => x.r);
+  const minR = Math.floor(Math.min(...ratings) / 100) * 100;
+  const maxR = Math.ceil(Math.max(...ratings) / 100) * 100;
+  const yPos = (margin.top + chartH) - ((p.r - minR) / (maxR - minR)) * chartH;
+  tooltip.style.top = yPos + 'px';
+
+  drawChart();
+});
+
+canvas.addEventListener('mouseleave', () => {
+  tooltip.style.display = 'none';
+  hoveredIdx = null;
+  drawChart();
+});
+</script>
+
+</body>
+</html>

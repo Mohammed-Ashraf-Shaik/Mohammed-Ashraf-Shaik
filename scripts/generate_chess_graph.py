@@ -17,7 +17,7 @@ def main():
     archives_data = fetch_json(ARCHIVES_URL)
     archives = archives_data.get("archives", [])
     
-    points = [] # list of (timestamp, rating)
+    points = [] # list of dicts: {"t": timestamp, "r": rating, "opp": opponent, "res": result}
     
     for archive_url in archives:
         try:
@@ -29,12 +29,16 @@ def main():
                     b = g.get("black", {})
                     if w.get("username", "").lower() == USERNAME.lower():
                         r = w.get("rating")
+                        opp = b.get("username", "Opponent")
+                        res = w.get("result", "")
                     elif b.get("username", "").lower() == USERNAME.lower():
                         r = b.get("rating")
+                        opp = w.get("username", "Opponent")
+                        res = b.get("result", "")
                     else:
                         continue
                     if t and r:
-                        points.append((t, r))
+                        points.append({"t": t, "r": r, "opp": opp, "res": res})
         except Exception as e:
             print(f"Error fetching {archive_url}: {e}")
             
@@ -43,10 +47,10 @@ def main():
         return
 
     # Sort chronologically
-    points.sort(key=lambda x: x[0])
+    points.sort(key=lambda x: x["t"])
     
-    timestamps = [p[0] for p in points]
-    ratings = [p[1] for p in points]
+    timestamps = [p["t"] for p in points]
+    ratings = [p["r"] for p in points]
     
     t_min = timestamps[0]
     t_max = timestamps[-1]
@@ -85,16 +89,16 @@ def main():
 
     # Build line path and area path
     path_commands = []
-    for i, (t, r) in enumerate(points):
-        x = get_x(t)
-        y = get_y(r)
+    for i, p in enumerate(points):
+        x = get_x(p["t"])
+        y = get_y(p["r"])
         cmd = "M" if i == 0 else "L"
         path_commands.append(f"{cmd} {x:.1f} {y:.1f}")
         
     line_path = " ".join(path_commands)
     
-    first_x = get_x(points[0][0])
-    last_x = get_x(points[-1][0])
+    first_x = get_x(points[0]["t"])
+    last_x = get_x(points[-1]["t"])
     bottom_y = m_top + chart_h
     area_path = f"{line_path} L {last_x:.1f} {bottom_y:.1f} L {first_x:.1f} {bottom_y:.1f} Z"
 
@@ -107,7 +111,7 @@ def main():
         <text x="{m_left - 12}" y="{y_pos + 4:.1f}" text-anchor="end" fill="#768390" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="11" font-weight="600">{val}</text>
         """)
 
-    # Date Grid Lines (X-Axis) - generate 6 intervals across time span
+    # Date Grid Lines (X-Axis)
     x_grid_lines = []
     num_ticks = 6
     for step in range(num_ticks + 1):
@@ -157,16 +161,6 @@ def main():
         <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
             <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4" />
         </filter>
-        <!-- Periodic Wave Reveal ClipPath with Stable Hold -->
-        <clipPath id="waveClip">
-            <rect x="0" y="0" width="{svg_w}" height="{svg_h}">
-                <animate attributeName="width" dur="7.5s" repeatCount="indefinite"
-                    keyTimes="0; 0.35; 0.85; 0.94; 1"
-                    values="0; {svg_w}; {svg_w}; 0; 0"
-                    keySplines="0.22 1 0.36 1; 0 0 1 1; 0.22 1 0.36 1; 0 0 1 1"
-                    calcMode="spline" />
-            </rect>
-        </clipPath>
     </defs>
 
     <style>
@@ -175,79 +169,15 @@ def main():
         .badge-title {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; fill: #8b949e; letter-spacing: 0.5px; }}
         .badge-value {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 800; }}
         
-        /* Continuous Waveform Sweep with 4s Stable Hold */
-        .wave-line {{
-            stroke-dasharray: 4500;
-            stroke-dashoffset: 4500;
-            animation: drawWave 7.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-        }}
-        @keyframes drawWave {{
-            0% {{ stroke-dashoffset: 4500; opacity: 1; }}
-            35% {{ stroke-dashoffset: 0; opacity: 1; }}
-            85% {{ stroke-dashoffset: 0; opacity: 1; }}
-            92% {{ opacity: 0; }}
-            96% {{ stroke-dashoffset: 4500; opacity: 0; }}
-            100% {{ stroke-dashoffset: 4500; opacity: 1; }}
-        }}
-
-        /* Wave Gradient Area Fill */
-        .wave-area {{
-            animation: fadeArea 7.5s ease-out infinite;
-        }}
-        @keyframes fadeArea {{
-            0% {{ opacity: 0; }}
-            15% {{ opacity: 0; }}
-            35% {{ opacity: 1; }}
-            85% {{ opacity: 1; }}
-            92% {{ opacity: 0; }}
-            100% {{ opacity: 0; }}
-        }}
-
-        /* Staggered Milestone Markers */
-        .marker-start {{
-            animation: fadeStart 7.5s ease-out infinite;
-        }}
-        @keyframes fadeStart {{
-            0% {{ opacity: 0; }}
-            5% {{ opacity: 1; }}
-            85% {{ opacity: 1; }}
-            92% {{ opacity: 0; }}
-            100% {{ opacity: 0; }}
-        }}
-
-        .marker-peak {{
-            animation: fadePeak 7.5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
-        }}
-        @keyframes fadePeak {{
-            0% {{ opacity: 0; transform: scale(0.7); }}
-            28% {{ opacity: 0; transform: scale(0.7); }}
-            34% {{ opacity: 1; transform: scale(1); }}
-            85% {{ opacity: 1; transform: scale(1); }}
-            92% {{ opacity: 0; }}
-            100% {{ opacity: 0; }}
-        }}
-
-        .marker-curr {{
-            animation: fadeCurr 7.5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
-        }}
-        @keyframes fadeCurr {{
-            0% {{ opacity: 0; transform: scale(0.7); }}
-            30% {{ opacity: 0; transform: scale(0.7); }}
-            36% {{ opacity: 1; transform: scale(1); }}
-            85% {{ opacity: 1; transform: scale(1); }}
-            92% {{ opacity: 0; }}
-            100% {{ opacity: 0; }}
-        }}
-
-        /* Live Radar Beacon Pulse */
-        .live-pulse {{
-            transform-origin: {curr_x:.1f}px {curr_y:.1f}px;
-            animation: pulse 2s ease-out infinite;
-        }}
-        @keyframes pulse {{
+        /* Direct SMIL & CSS Fallback Animation */
+        @keyframes pulseGlow {{
             0% {{ r: 5px; opacity: 0.9; }}
-            50% {{ r: 13px; opacity: 0.25; }}
+            50% {{ r: 14px; opacity: 0.2; }}
             100% {{ r: 18px; opacity: 0; }}
+        }}
+        .beacon {{
+            animation: pulseGlow 2s ease-out infinite;
+            transform-origin: {curr_x:.1f}px {curr_y:.1f}px;
         }}
     </style>
 
@@ -297,28 +227,39 @@ def main():
     <line x1="{m_left}" y1="{bottom_y}" x2="{m_left + chart_w}" y2="{bottom_y}" stroke="#30363d" stroke-width="1.2" />
 
     <!-- Subtle Guide Trace (Always Visible Underneath) -->
-    <path d="{line_path}" fill="none" stroke="#213524" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.45" />
+    <path d="{line_path}" fill="none" stroke="#213524" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.35" />
 
-    <!-- Dynamic Wave Graph Container with Clip-Path Reveal -->
-    <g clip-path="url(#waveClip)">
-        <!-- Area Gradient Fill -->
-        <path class="wave-area" d="{area_path}" fill="url(#chartGradient)" />
+    <!-- Animated Area Fill (Fades In In Sync With Wave) -->
+    <path d="{area_path}" fill="url(#chartGradient)" opacity="1">
+        <animate attributeName="opacity" dur="6.5s" repeatCount="indefinite"
+            keyTimes="0; 0.25; 0.45; 0.88; 0.95; 1"
+            values="0; 0.2; 1; 1; 0; 0"
+            calcMode="linear" />
+    </path>
 
-        <!-- Rating Trajectory Wave Line -->
-        <path class="wave-line" d="{line_path}" fill="none" stroke="url(#lineGradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-    </g>
+    <!-- Live Rating Trajectory Wave Line (Pure SMIL Animation - Zero ClipPath Dependency) -->
+    <path d="{line_path}" fill="none" stroke="url(#lineGradient)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5000" stroke-dashoffset="5000">
+        <animate attributeName="stroke-dashoffset" dur="6.5s" repeatCount="indefinite"
+            keyTimes="0; 0.42; 0.88; 0.96; 1"
+            values="5000; 0; 0; 5000; 5000"
+            keySplines="0.22 1 0.36 1; 0 0 1 1; 0.22 1 0.36 1; 0 0 1 1"
+            calcMode="spline" />
+    </path>
 
     <!-- ==================== MILESTONE MARKERS (NO OVERLAP) ==================== -->
 
     <!-- 1. Start Point Indicator -->
-    <g class="marker-start">
+    <g>
         <circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="4.5" fill="#4e8d35" stroke="#0d1117" stroke-width="2" />
         <rect x="{start_x + 8:.1f}" y="{start_y - 12:.1f}" width="72" height="22" rx="5" fill="#161b22" stroke="#30363d" stroke-width="1" />
         <text x="{start_x + 14:.1f}" y="{start_y + 3:.1f}" fill="#8b949e" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="10" font-weight="700">Start: {r_start}</text>
     </g>
 
     <!-- 2. Peak Point Indicator (Positioned ABOVE-LEFT with Gold Pin Line) -->
-    <g class="marker-peak">
+    <g>
+        <animate attributeName="opacity" dur="6.5s" repeatCount="indefinite"
+            keyTimes="0; 0.30; 0.42; 0.88; 0.95; 1"
+            values="0; 0; 1; 1; 0; 0" />
         <!-- Connecting leader line -->
         <line x1="{peak_box_x + peak_box_w:.1f}" y1="{peak_box_y + peak_box_h:.1f}" x2="{peak_x:.1f}" y2="{peak_y:.1f}" stroke="#f1e05a" stroke-width="1.2" stroke-dasharray="2 2" />
         <!-- Glowing peak point -->
@@ -329,9 +270,12 @@ def main():
     </g>
 
     <!-- 3. Current Point Indicator (Positioned BELOW-LEFT with Emerald Pin Line) -->
-    <g class="marker-curr">
+    <g>
+        <animate attributeName="opacity" dur="6.5s" repeatCount="indefinite"
+            keyTimes="0; 0.34; 0.44; 0.88; 0.95; 1"
+            values="0; 0; 1; 1; 0; 0" />
         <!-- Pulse ring behind point -->
-        <circle class="live-pulse" cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="6" fill="#81b64c" />
+        <circle class="beacon" cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="6" fill="#81b64c" />
         <!-- Connecting leader line -->
         <line x1="{curr_box_x + curr_box_w:.1f}" y1="{curr_box_y:.1f}" x2="{curr_x:.1f}" y2="{curr_y:.1f}" stroke="#81b64c" stroke-width="1.2" stroke-dasharray="2 2" />
         <!-- Current point dot -->
@@ -348,6 +292,20 @@ def main():
         f.write(svg_content)
         
     print(f"Generated graph successfully at: {output_path}")
+
+    # Also save points data for interactive HTML dashboard
+    data_path = os.path.join(os.path.dirname(__file__), "..", "chess_data.json")
+    with open(data_path, "w", encoding="utf-8") as f:
+        json.dump({
+            "username": USERNAME,
+            "total_games": total_games,
+            "peak": r_peak,
+            "current": r_curr,
+            "start": r_start,
+            "gain": r_gain,
+            "points": points
+        }, f)
+    print(f"Saved interactive data at: {data_path}")
 
 if __name__ == "__main__":
     main()
