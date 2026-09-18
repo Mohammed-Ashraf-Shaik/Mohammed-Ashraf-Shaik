@@ -1,0 +1,21 @@
+name: Chess.com Stats Action
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at 00:00 UTC
+  workflow_dispatch: # Allows manual run anytime
+
+jobs:
+  update-readme:
+    name: Update README with latest Chess.com stats
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Fetch and inject Chess.com stats
+        uses: Balastrong/chess-stats-action@main
+        with:
+          CHESS_USERNAME: ashumm
