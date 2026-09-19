@@ -68,6 +68,14 @@
 
 ---
 
+## 👾 GitHub Contribution Buster // Commit Destroyer
+
+<p align="center">
+  <img src="commit_buster.gif" alt="Mohammad Ashraf Shaik Contribution Buster - Commit Destroyer" width="100%" />
+</p>
+
+---
+
 ## 🚀 Featured Projects
 
 | Project | Tech Stack | Description | Links |
