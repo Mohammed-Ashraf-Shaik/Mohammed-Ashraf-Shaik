@@ -1,0 +1,37 @@
+<svg width="800" height="62" viewBox="0 0 800 62" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @keyframes typing {
+        from { clip-path: inset(0 100% 0 0); }
+        to   { clip-path: inset(0 0% 0 0); }
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50%      { opacity: 0; }
+      }
+      .group {
+        animation: typing 3s steps(35, end) 0.4s both;
+        clip-path: inset(0 100% 0 0);
+      }
+      .cur {
+        font-family: "Fira Code", "Courier New", monospace;
+        font-size: 27px;
+        dominant-baseline: middle;
+        fill: #39D353;
+        animation: blink 0.9s step-end infinite;
+      }
+    </style>
+  </defs>
+
+  <g class="group">
+    <text
+      font-family='"Fira Code", "Courier New", Courier, monospace'
+      font-size="27"
+      dominant-baseline="middle"
+      x="127" y="31"
+      xml:space="preserve"
+    ><tspan fill="#39D353">Hi there, I&#x27;m </tspan><tspan fill="#ffffff" font-weight="bold">M</tspan><tspan fill="#39D353">ohammad </tspan><tspan fill="#ffffff" font-weight="bold">A</tspan><tspan fill="#39D353">shraf Shaik</tspan></text>
+  </g>
+
+  <text class="cur" x="675" y="31">|</text>
+</svg>

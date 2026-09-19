@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="name_banner.svg?v=5" alt="Typing SVG" width="700" />
+  <img src="name_banner.svg?v=6" alt="Typing SVG" width="700" />
   <br/>&#x1F44B;
 </h1>
 
@@ -27,7 +27,7 @@
 
 ---
 
-## <img src="https://api.iconify.design/lucide/code-2.svg?color=white" width="22" height="22"/> Live LeetCode Progress & Heatmap
+## <img src="https://api.iconify.design/lucide:code-2.svg?color=%2339D353" width="22" height="22"/> Live LeetCode Progress & Heatmap
 
 <p align="center">
   <a href="https://leetcode.com/u/Shaik_mohameed_Ashraf/" target="_blank">
@@ -37,7 +37,7 @@
 
 ---
 
-<h3 align="center"><img src="https://api.iconify.design/lucide/crown.svg?color=white" width="20" height="20"/> Live Chess.com Progress &amp; Tracking</h3>
+<h3 align="center"><img src="https://api.iconify.design/lucide:crown.svg?color=%2339D353" width="20" height="20"/> Live Chess.com Progress &amp; Tracking</h3>
 
 <p align="center">
   <a href="https://www.chess.com/member/ashumm" target="_blank">
@@ -71,7 +71,7 @@
 
 ---
 
-## <img src="https://api.iconify.design/lucide/rocket.svg?color=white" width="22" height="22"/> Featured Projects
+## <img src="https://api.iconify.design/lucide:rocket.svg?color=%2339D353" width="22" height="22"/> Featured Projects
 
 | Project | Tech Stack | Description | Links |
 | :--- | :--- | :--- | :--- |
@@ -84,7 +84,7 @@
 
 ---
 
-## <img src="https://api.iconify.design/lucide/wrench.svg?color=white" width="22" height="22"/> Languages &amp; Technologies
+## <img src="https://api.iconify.design/lucide:wrench.svg?color=%2339D353" width="22" height="22"/> Languages &amp; Technologies
 
 <p align="center">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
@@ -100,7 +100,7 @@
 
 ---
 
-<h3 align="center"><img src="https://api.iconify.design/lucide/bot.svg?color=white" width="20" height="20"/> I vibe with</h3>
+<h3 align="center"><img src="https://api.iconify.design/lucide:bot.svg?color=%2339D353" width="20" height="20"/> I vibe with</h3>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Antigravity-0D1117?style=for-the-badge&logo=google&logoColor=white" alt="Antigravity" />
@@ -112,7 +112,7 @@
 
 ---
 
-## <img src="https://api.iconify.design/lucide/bar-chart-2.svg?color=white" width="22" height="22"/> GitHub Activity &amp; Stats
+## <img src="https://api.iconify.design/lucide:bar-chart-2.svg?color=%2339D353" width="22" height="22"/> GitHub Activity &amp; Stats
 
 <p align="center">
   <img src="https://github-readme-stats-fast.vercel.app/api?username=Mohammed-Ashraf-Shaik&show_icons=true&theme=tokyonight&hide_border=true" alt="Mohammad Ashraf Shaik GitHub Stats" height="175" />
