@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="name_banner.svg?v=7" alt="Typing SVG" width="700" />
+  <img src="name_animation.gif?v=1" alt="Hi there, I&#39;m Mohammad Ashraf Shaik" width="680" />
   <br/>&#x1F44B;
 </h1>
 
