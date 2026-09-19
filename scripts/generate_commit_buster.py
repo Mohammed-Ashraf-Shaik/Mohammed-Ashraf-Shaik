@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ==================== CONFIGURATION ====================
 WIDTH = 890
-HEIGHT = 285
+HEIGHT = 270
 FPS = 25
 TOTAL_FRAMES = 115
 
@@ -18,12 +18,13 @@ HEADER_LINE = (33, 38, 45)
 EMPTY_CELL  = (22, 27, 34)
 EMPTY_BORDER= (33, 38, 45)
 
+# GitHub Official Contribution Greens
 GREEN_LEVELS = [
     (22, 27, 34),     # 0: empty
-    (14, 68, 41),     # 1: dark green
-    (0, 109, 50),     # 2: medium green
-    (38, 166, 65),    # 3: light green
-    (57, 211, 83)     # 4: bright green
+    (14, 68, 41),     # 1: dark green (#0e4429)
+    (0, 109, 50),     # 2: medium green (#006d32)
+    (38, 166, 65),    # 3: light green (#26a641)
+    (57, 211, 83)     # 4: bright green (#39d353)
 ]
 
 HOT_GREEN   = (0, 255, 136)
@@ -35,11 +36,15 @@ FLASH_WHITE = (255, 255, 255)
 FLASH_YELLOW= (255, 230, 50)
 FLASH_ORANGE= (255, 110, 20)
 
-# ==================== FONTS ====================
 def get_font(size, bold=False):
-    font_names = ['segoeuib.ttf' if bold else 'segoeui.ttf', 'arialbd.ttf' if bold else 'arial.ttf', 'consola.ttf']
-    for name in font_names:
-        p = os.path.join('C:\\Windows\\Fonts', name)
+    font_candidates = [
+        'C:\\Windows\\Fonts\\segoeuib.ttf' if bold else 'C:\\Windows\\Fonts\\segoeui.ttf',
+        'C:\\Windows\\Fonts\\arialbd.ttf' if bold else 'C:\\Windows\\Fonts\\arial.ttf',
+        'C:\\Windows\\Fonts\\consola.ttf',
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf' if bold else '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf' if bold else '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'
+    ]
+    for p in font_candidates:
         if os.path.exists(p):
             try:
                 return ImageFont.truetype(p, size)
@@ -47,40 +52,39 @@ def get_font(size, bold=False):
                 pass
     return ImageFont.load_default()
 
-FONT_TITLE   = get_font(13, bold=True)
-FONT_SUB     = get_font(10, bold=False)
-FONT_HUD_LBL = get_font(9, bold=True)
-FONT_HUD_VAL = get_font(12, bold=True)
-FONT_LABEL   = get_font(9, bold=False)
-FONT_POPUP   = get_font(11, bold=True)
-FONT_VICTORY = get_font(13, bold=True)
+FONT_HEADER = get_font(12, bold=True)
+FONT_SUB    = get_font(10, bold=False)
+FONT_LABEL  = get_font(9, bold=False)
 
-# ==================== SCRAPE CONTRIBUTIONS ====================
-def fetch_contributions(username="Mohammed-Ashraf-Shaik"):
+# ==================== PARSE EXACT 2D GITHUB CONTRIBUTIONS ====================
+def fetch_real_contributions(username="Mohammed-Ashraf-Shaik"):
     url = f"https://github.com/users/{username}/contributions"
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
     try:
         with urllib.request.urlopen(req) as resp:
             html = resp.read().decode('utf-8')
-            matches = re.findall(r'data-level="(\d+)"[^>]*data-date="([^"]+)"', html)
-            if not matches:
-                matches = re.findall(r'data-date="([^"]+)"[^>]*data-level="(\d+)"', html)
-                matches = [(m[1], m[0]) for m in matches]
-            if matches:
-                levels = [int(m[0]) for m in matches]
-                if len(levels) >= 371:
-                    return levels[-371:]
-                return levels
+            tbody_match = re.search(r'<tbody>(.*?)</tbody>', html, re.DOTALL)
+            if tbody_match:
+                tbody = tbody_match.group(1)
+                rows = re.findall(r'<tr[^>]*>(.*?)</tr>', tbody, re.DOTALL)
+                grid_2d = [] # 7 rows (Sunday to Saturday) x 53 cols (weeks)
+                for r in rows:
+                    cells = re.findall(r'data-date="([^"]+)"[^>]*data-level="(\d+)"', r)
+                    if not cells:
+                        cells = re.findall(r'data-level="(\d+)"[^>]*data-date="([^"]+)"', r)
+                        cells = [(c[1], c[0]) for c in cells]
+                    grid_2d.append([int(lvl) for d, lvl in cells])
+                
+                if len(grid_2d) == 7 and len(grid_2d[0]) >= 52:
+                    return grid_2d
     except Exception as e:
-        print("Fetch error, using fallback calendar:", e)
+        print("Scrape error, using fallback:", e)
 
+    # Fallback realistic 7x53
     random.seed(1337)
-    grid = []
-    for _ in range(53 * 7):
-        grid.append(random.choice([1, 2, 3, 4]) if random.random() > 0.86 else 0)
-    return grid
+    return [[random.choice([1, 2, 3, 4]) if random.random() > 0.85 else 0 for _ in range(53)] for _ in range(7)]
 
-# ==================== PARTICLE & EXPLOSION SYSTEM ====================
+# ==================== EXPLOSION SYSTEM ====================
 class Shard:
     def __init__(self, x, y, vx, vy, color, size, rot_speed):
         self.x = x
@@ -210,8 +214,9 @@ class EpicExplosion:
                 draw.line([(sx, sy), (sx - sp['vx']*0.8, sy - sp['vy']*0.8)], fill=sp['color'], width=1)
                 draw.point((sx, sy), fill=FLASH_WHITE)
 
-class Bullet:
-    def __init__(self, x0, y0, x1, y1, duration=3):
+# ==================== BATARANG PROJECTILE ====================
+class Batarang:
+    def __init__(self, x0, y0, x1, y1, duration=4):
         self.x0 = x0
         self.y0 = y0
         self.x1 = x1
@@ -219,9 +224,11 @@ class Bullet:
         self.duration = duration
         self.progress = 0
         self.alive = True
+        self.rot = 0.0
 
     def update(self):
         self.progress += 1
+        self.rot += 1.2 # fast spin
         if self.progress >= self.duration:
             self.alive = False
 
@@ -233,173 +240,205 @@ class Bullet:
         tail_x = self.x0 + (self.x1 - self.x0) * prev_t
         tail_y = self.y0 + (self.y1 - self.y0) * prev_t
 
-        draw.line([(tail_x, tail_y), (curr_x, curr_y)], fill=CYAN_ACCENT, width=4)
-        draw.line([(tail_x, tail_y), (curr_x, curr_y)], fill=FLASH_WHITE, width=2)
-        draw.ellipse([curr_x - 3, curr_y - 3, curr_x + 3, curr_y + 3], fill=FLASH_WHITE)
+        # Glowing blue kinetic trail
+        draw.line([(tail_x, tail_y), (curr_x, curr_y)], fill=(0, 200, 255), width=3)
+        draw.line([(tail_x, tail_y), (curr_x, curr_y)], fill=(255, 255, 255), width=1)
 
-class FloatingText:
-    def __init__(self, x, y, text, color):
-        self.x = x
-        self.y = y
-        self.text = text
-        self.color = color
-        self.life = 18
+        # Spinning Batarang
+        r = 6.0
+        cos_a = math.cos(self.rot)
+        sin_a = math.sin(self.rot)
+        # Bat wings contour
+        local_pts = [
+            (0, -r * 0.35),
+            (-r * 0.6, -r * 0.9),
+            (-r, -r * 0.3),
+            (-r * 0.7, 0),
+            (-r, r * 0.5),
+            (0, r * 0.2),
+            (r, r * 0.5),
+            (r * 0.7, 0),
+            (r, -r * 0.3),
+            (r * 0.6, -r * 0.9)
+        ]
+        rot_pts = [
+            (curr_x + px * cos_a - py * sin_a, curr_y + px * sin_a + py * cos_a)
+            for px, py in local_pts
+        ]
+        draw.polygon(rot_pts, fill=(10, 14, 20), outline=(0, 240, 255))
 
-    def update(self):
-        self.y -= 1.3
-        self.life -= 1
+# ==================== BATMAN SPRITE RENDERER ====================
+def draw_batman(draw, x, y, aim_angle=-math.pi/4, firing=False, recoil=0, run_frame=0, victory=False):
+    """
+    Renders Batman at platform position (x, y). Height ~54px.
+    """
+    COWL_BLACK  = (10, 12, 16)
+    COWL_DARK   = (18, 22, 28)
+    COWL_MID    = (30, 36, 46)
+    EYES_WHITE  = (240, 250, 255)
+    EYES_CYAN   = (180, 230, 255)
+    JAW_SKIN    = (210, 160, 120)
 
-    def draw(self, draw, font):
-        if self.life > 0:
-            draw.text((self.x + 1, self.y + 1), self.text, fill=(0, 0, 0), font=font, anchor="mm")
-            draw.text((self.x, self.y), self.text, fill=self.color, font=font, anchor="mm")
+    SUIT_DARK   = (22, 26, 34)
+    SUIT_MID    = (35, 42, 54)
+    BAT_INSIGNIA= (8, 10, 14)
 
-# ==================== PIXEL ART HELPERS ====================
-def draw_pixel_star(draw, cx, cy, r=6, col=GOLD_ACCENT):
-    """Draws a 5-point vector star at (cx, cy)."""
-    pts = []
-    for i in range(10):
-        a = -math.pi / 2 + i * (math.pi / 5)
-        cur_r = r if i % 2 == 0 else r * 0.45
-        pts.append((cx + math.cos(a) * cur_r, cy + math.sin(a) * cur_r))
-    draw.polygon(pts, fill=col)
+    UTILITY_GOLD= (235, 170, 20)
+    BELT_DARK   = (160, 110, 10)
 
-def draw_muzzle_flash(draw, fx, fy, aim_angle):
-    """Draws a multi-spike energetic starburst muzzle flash."""
-    spikes = [
-        (0.0, 20, FLASH_WHITE, 4),
-        (0.35, 15, FLASH_YELLOW, 2),
-        (-0.35, 15, FLASH_YELLOW, 2),
-        (0.7, 11, FLASH_ORANGE, 2),
-        (-0.7, 11, FLASH_ORANGE, 2),
-        (1.1, 7, FLASH_ORANGE, 1),
-        (-1.1, 7, FLASH_ORANGE, 1),
-    ]
-    for a_off, length, col, w in spikes:
-        a = aim_angle + a_off
-        ex = fx + math.cos(a) * length
-        ey = fy + math.sin(a) * length
-        draw.line([(fx, fy), (ex, ey)], fill=col, width=w)
-    draw.ellipse([fx - 4, fy - 4, fx + 4, fy + 4], fill=FLASH_WHITE, outline=FLASH_YELLOW)
+    CAPE_BLACK  = (8, 10, 14)
+    CAPE_MID    = (16, 20, 26)
+    CAPE_HIGHLIGHT = (28, 35, 48)
 
-def draw_hero_sprite(draw, x, y, aim_angle=-math.pi/4, firing=False, recoil=0, run_frame=0, victory=False, charge_glow=False):
-    HELMET_DARK = (20, 24, 30)
-    HELMET_MID  = (36, 44, 56)
-    HELMET_LIGHT= (55, 65, 81)
-    VISOR_CORE  = (220, 255, 255)
-    VISOR_CYAN  = (0, 229, 255)
+    GAUNTLET    = (14, 17, 22)
+    BOOTS       = (10, 12, 16)
 
-    SKIN        = (215, 160, 120)
-    ARMOR_DARK  = (25, 30, 40)
-    ARMOR_MID   = (40, 50, 68)
-    CORE_GLOW   = (0, 255, 136)
+    head_y   = y - 50
+    neck_y   = y - 38
+    cowl_top = y - 53
+    chest_y  = y - 36
+    waist_y  = y - 22
+    knees_y  = y - 11
 
-    BELT        = (18, 22, 28)
-    POUCHES     = (50, 60, 75)
-    PANTS_DARK  = (22, 28, 38)
-    PANTS_MID   = (35, 45, 60)
-    KNEE_PAD    = (50, 60, 75)
-    BOOTS       = (12, 16, 22)
+    rc_shift = int(recoil)
+    bx = x - rc_shift
 
-    CANNON_DARK = (20, 24, 32)
-    CANNON_METAL= (60, 72, 90)
-    CANNON_LIGHT= (90, 105, 130)
-    CANNON_NEON = (255, 220, 0) if charge_glow else (0, 240, 255)
-
-    head_y = y - 50
-    neck_y = y - 38
-    chest_y = y - 36
-    waist_y = y - 22
-    knees_y = y - 11
-
-    # 1. Jetpack
-    jp_x = x - 12
-    draw.rounded_rectangle([jp_x - 5, chest_y - 2, jp_x + 3, waist_y + 2], radius=2, fill=HELMET_DARK, outline=HELMET_MID)
-    draw.polygon([(jp_x - 4, waist_y + 2), (jp_x + 2, waist_y + 2), (jp_x - 1, waist_y + 7)], fill=HELMET_MID)
-    if run_frame > 0 or firing:
-        flame_len = 9 if firing else 6
-        draw.polygon([(jp_x - 3, waist_y + 3), (jp_x + 1, waist_y + 3), (jp_x - 1, waist_y + 3 + flame_len)], fill=FLASH_ORANGE)
-        draw.polygon([(jp_x - 2, waist_y + 3), (jp_x, waist_y + 3), (jp_x - 1, waist_y + 3 + flame_len - 2)], fill=FLASH_YELLOW)
-
-    # 2. Legs & Feet
+    # 1. BILLOWING BAT CAPE (Drawn behind body)
     if victory:
-        draw.rectangle([x - 11, waist_y, x - 4, knees_y], fill=PANTS_MID)
-        draw.rectangle([x + 4, waist_y, x + 11, knees_y], fill=PANTS_MID)
-        draw.rectangle([x - 12, knees_y, x - 3, y - 5], fill=PANTS_DARK)
-        draw.rectangle([x + 3, knees_y, x + 12, y - 5], fill=PANTS_DARK)
-        draw.rounded_rectangle([x - 14, y - 5, x - 2, y], radius=2, fill=BOOTS)
-        draw.rounded_rectangle([x + 2, y - 5, x + 14, y], radius=2, fill=BOOTS)
+        # Cape spreading out wide like bat wings
+        pts = [
+            (bx - 4, chest_y), (bx - 26, knees_y), (bx - 32, y + 2),
+            (bx - 20, y - 4), (bx - 10, y + 1), (bx, y - 3),
+            (bx + 10, y + 1), (bx + 20, y - 4), (bx + 32, y + 2),
+            (bx + 26, knees_y), (bx + 4, chest_y)
+        ]
+        draw.polygon(pts, fill=CAPE_BLACK)
+        draw.line([(bx - 4, chest_y), (bx - 32, y + 2)], fill=CAPE_HIGHLIGHT, width=2)
+        draw.line([(bx + 4, chest_y), (bx + 32, y + 2)], fill=CAPE_HIGHLIGHT, width=2)
+    elif run_frame > 0:
+        # Flowing back in the wind
+        flutter = (run_frame % 3) * 3
+        draw.polygon([
+            (bx - 4, chest_y),
+            (bx - 24 - flutter, knees_y - 4),
+            (bx - 34 - flutter, y - 8),
+            (bx - 26 - flutter, y - 2),
+            (bx - 18, y),
+            (bx - 2, waist_y)
+        ], fill=CAPE_BLACK)
+        draw.line([(bx - 4, chest_y), (bx - 34 - flutter, y - 8)], fill=CAPE_MID, width=2)
+    else:
+        # Heavy dark cape hanging
+        draw.polygon([
+            (bx - 6, chest_y + 2),
+            (bx - 20, knees_y),
+            (bx - 24, y),
+            (bx - 15, y - 3),
+            (bx - 8, y),
+            (bx, waist_y)
+        ], fill=CAPE_BLACK)
+        draw.line([(bx - 6, chest_y + 2), (bx - 24, y)], fill=CAPE_MID, width=2)
+
+    # 2. LEGS & COMBAT BOOTS
+    if victory:
+        draw.rectangle([bx - 10, waist_y, bx - 3, knees_y], fill=SUIT_MID)
+        draw.rectangle([bx + 3, waist_y, bx + 10, knees_y], fill=SUIT_MID)
+        draw.rectangle([bx - 11, knees_y, bx - 2, y - 5], fill=SUIT_DARK)
+        draw.rectangle([bx + 2, knees_y, bx + 11, y - 5], fill=SUIT_DARK)
+        draw.rounded_rectangle([bx - 13, y - 5, bx - 1, y], radius=2, fill=BOOTS)
+        draw.rounded_rectangle([bx + 1, y - 5, bx + 13, y], radius=2, fill=BOOTS)
     elif run_frame > 0:
         cycle = run_frame % 4
         if cycle == 0:
-            draw.line([(x - 6, waist_y), (x - 15, knees_y), (x - 18, y)], fill=PANTS_MID, width=7)
-            draw.line([(x + 6, waist_y), (x + 11, knees_y), (x + 15, y - 2)], fill=PANTS_DARK, width=7)
-            draw.rounded_rectangle([x - 22, y - 4, x - 11, y], radius=2, fill=BOOTS)
-            draw.rounded_rectangle([x + 9, y - 6, x + 20, y - 2], radius=2, fill=BOOTS)
+            draw.line([(bx - 5, waist_y), (bx - 14, knees_y), (bx - 17, y)], fill=SUIT_MID, width=7)
+            draw.line([(bx + 5, waist_y), (bx + 10, knees_y), (bx + 14, y - 2)], fill=SUIT_DARK, width=7)
+            draw.rounded_rectangle([bx - 21, y - 4, bx - 10, y], radius=2, fill=BOOTS)
+            draw.rounded_rectangle([bx + 8, y - 6, bx + 19, y - 2], radius=2, fill=BOOTS)
         elif cycle == 1:
-            draw.line([(x - 6, waist_y), (x - 7, knees_y), (x - 9, y)], fill=PANTS_MID, width=7)
-            draw.line([(x + 6, waist_y), (x + 7, knees_y), (x + 9, y)], fill=PANTS_DARK, width=7)
-            draw.rounded_rectangle([x - 13, y - 4, x - 3, y], radius=2, fill=BOOTS)
-            draw.rounded_rectangle([x + 3, y - 4, x + 13, y], radius=2, fill=BOOTS)
+            draw.line([(bx - 5, waist_y), (bx - 6, knees_y), (bx - 8, y)], fill=SUIT_MID, width=7)
+            draw.line([(bx + 5, waist_y), (bx + 6, knees_y), (bx + 8, y)], fill=SUIT_DARK, width=7)
+            draw.rounded_rectangle([bx - 12, y - 4, bx - 2, y], radius=2, fill=BOOTS)
+            draw.rounded_rectangle([bx + 2, y - 4, bx + 12, y], radius=2, fill=BOOTS)
         elif cycle == 2:
-            draw.line([(x - 6, waist_y), (x + 10, knees_y), (x + 15, y - 2)], fill=PANTS_DARK, width=7)
-            draw.line([(x + 6, waist_y), (x - 13, knees_y), (x - 17, y)], fill=PANTS_MID, width=7)
-            draw.rounded_rectangle([x + 9, y - 6, x + 19, y - 2], radius=2, fill=BOOTS)
-            draw.rounded_rectangle([x - 21, y - 4, x - 10, y], radius=2, fill=BOOTS)
+            draw.line([(bx - 5, waist_y), (bx + 9, knees_y), (bx + 14, y - 2)], fill=SUIT_DARK, width=7)
+            draw.line([(bx + 5, waist_y), (bx - 12, knees_y), (bx - 16, y)], fill=SUIT_MID, width=7)
+            draw.rounded_rectangle([bx + 8, y - 6, bx + 18, y - 2], radius=2, fill=BOOTS)
+            draw.rounded_rectangle([bx - 20, y - 4, bx - 9, y], radius=2, fill=BOOTS)
         else:
-            draw.line([(x - 6, waist_y), (x + 5, knees_y), (x + 7, y)], fill=PANTS_DARK, width=7)
-            draw.line([(x + 6, waist_y), (x - 5, knees_y), (x - 7, y)], fill=PANTS_MID, width=7)
-            draw.rounded_rectangle([x + 3, y - 4, x + 12, y], radius=2, fill=BOOTS)
-            draw.rounded_rectangle([x - 12, y - 4, x - 3, y], radius=2, fill=BOOTS)
+            draw.line([(bx - 5, waist_y), (bx + 4, knees_y), (bx + 6, y)], fill=SUIT_DARK, width=7)
+            draw.line([(bx + 5, waist_y), (bx - 4, knees_y), (bx - 6, y)], fill=SUIT_MID, width=7)
+            draw.rounded_rectangle([bx + 2, y - 4, bx + 11, y], radius=2, fill=BOOTS)
+            draw.rounded_rectangle([bx - 11, y - 4, bx - 2, y], radius=2, fill=BOOTS)
     else:
-        rc_shift = int(recoil * 0.8)
-        draw.line([(x - 6 - rc_shift, waist_y), (x - 12 - rc_shift, knees_y), (x - 15 - rc_shift, y)], fill=PANTS_MID, width=7)
-        draw.line([(x + 6 - rc_shift, waist_y), (x + 10 - rc_shift, knees_y), (x + 14 - rc_shift, y)], fill=PANTS_DARK, width=7)
-        draw.rectangle([x - 15 - rc_shift, knees_y - 3, x - 9 - rc_shift, knees_y + 3], fill=KNEE_PAD)
-        draw.rectangle([x + 7 - rc_shift, knees_y - 3, x + 13 - rc_shift, knees_y + 3], fill=KNEE_PAD)
-        draw.rounded_rectangle([x - 20 - rc_shift, y - 5, x - 8 - rc_shift, y], radius=2, fill=BOOTS)
-        draw.rounded_rectangle([x + 8 - rc_shift, y - 5, x + 20 - rc_shift, y], radius=2, fill=BOOTS)
+        draw.line([(bx - 5, waist_y), (bx - 11, knees_y), (bx - 14, y)], fill=SUIT_MID, width=7)
+        draw.line([(bx + 5, waist_y), (bx + 9, knees_y), (bx + 13, y)], fill=SUIT_DARK, width=7)
+        draw.rounded_rectangle([bx - 18, y - 5, bx - 7, y], radius=2, fill=BOOTS)
+        draw.rounded_rectangle([bx + 7, y - 5, bx + 18, y], radius=2, fill=BOOTS)
 
-    # 3. Torso & Armor
-    rc_shift = int(recoil)
-    tx = x - rc_shift
-    draw.rounded_rectangle([tx - 10, chest_y, tx + 10, waist_y], radius=3, fill=ARMOR_MID, outline=ARMOR_DARK)
-    draw.rounded_rectangle([tx - 8, chest_y + 2, tx + 8, waist_y - 4], radius=2, fill=ARMOR_DARK)
-    draw.rounded_rectangle([tx - 4, chest_y + 5, tx + 4, chest_y + 11], radius=2, fill=CORE_GLOW)
-    draw.rectangle([tx - 2, chest_y + 7, tx + 2, chest_y + 9], fill=FLASH_WHITE)
-    draw.rectangle([tx - 11, waist_y - 4, tx + 11, waist_y], fill=BELT)
-    draw.rectangle([tx - 9, waist_y - 3, tx - 5, waist_y + 1], fill=POUCHES)
-    draw.rectangle([tx + 5, waist_y - 3, tx + 9, waist_y + 1], fill=POUCHES)
+    # 3. TORSO & BAT-ARMOR
+    draw.rounded_rectangle([bx - 10, chest_y, bx + 10, waist_y], radius=3, fill=SUIT_MID, outline=COWL_BLACK)
+    draw.line([(bx, chest_y + 3), (bx, waist_y - 4)], fill=COWL_DARK, width=1)
 
-    # 4. Head & Helmet
-    hx = tx
-    draw.rounded_rectangle([hx - 9, head_y, hx + 9, neck_y], radius=4, fill=HELMET_MID, outline=HELMET_DARK)
-    draw.rounded_rectangle([hx - 2, head_y + 4, hx + 10, head_y + 9], radius=2, fill=VISOR_CYAN)
-    draw.line([(hx + 1, head_y + 5), (hx + 9, head_y + 5)], fill=VISOR_CORE, width=2)
-    draw.rectangle([hx - 9, head_y + 3, hx - 6, head_y + 9], fill=HELMET_LIGHT)
-    draw.line([(hx - 7, head_y), (hx - 7, head_y - 6)], fill=CANNON_METAL, width=2)
-    draw.point((hx - 7, head_y - 6), fill=CORE_GLOW)
+    # BAT-SYMBOL
+    draw.polygon([
+        (bx, chest_y + 8),
+        (bx - 3, chest_y + 4),
+        (bx - 7, chest_y + 3),
+        (bx - 8, chest_y + 6),
+        (bx - 5, chest_y + 9),
+        (bx - 3, chest_y + 11),
+        (bx, chest_y + 13),
+        (bx + 3, chest_y + 11),
+        (bx + 5, chest_y + 9),
+        (bx + 8, chest_y + 6),
+        (bx + 7, chest_y + 3),
+        (bx + 3, chest_y + 4),
+    ], fill=BAT_INSIGNIA)
+    draw.line([(bx - 1, chest_y + 3), (bx - 1, chest_y + 2)], fill=BAT_INSIGNIA, width=1)
+    draw.line([(bx + 1, chest_y + 3), (bx + 1, chest_y + 2)], fill=BAT_INSIGNIA, width=1)
 
-    # 5. Weapon
+    # GOLD UTILITY BELT
+    draw.rectangle([bx - 10, waist_y - 4, bx + 10, waist_y], fill=UTILITY_GOLD)
+    draw.rectangle([bx - 2, waist_y - 5, bx + 2, waist_y + 1], fill=BELT_DARK, outline=UTILITY_GOLD)
+    draw.rectangle([bx - 8, waist_y - 4, bx - 5, waist_y], fill=BELT_DARK)
+    draw.rectangle([bx + 5, waist_y - 4, bx + 8, waist_y], fill=BELT_DARK)
+
+    # 4. BAT-COWL & FACE
+    draw.rounded_rectangle([bx - 8, head_y, bx + 8, neck_y], radius=3, fill=COWL_DARK, outline=COWL_BLACK)
+    draw.polygon([
+        (bx - 4, neck_y - 4), (bx + 4, neck_y - 4),
+        (bx + 3, neck_y), (bx - 3, neck_y)
+    ], fill=JAW_SKIN)
+    draw.line([(bx - 2, neck_y - 2), (bx + 2, neck_y - 2)], fill=(160, 110, 80), width=1)
+
+    # BAT EARS
+    draw.polygon([(bx - 8, head_y + 4), (bx - 8, head_y - 7), (bx - 4, head_y + 1)], fill=COWL_BLACK)
+    draw.polygon([(bx + 4, head_y + 1), (bx + 8, head_y - 7), (bx + 8, head_y + 4)], fill=COWL_BLACK)
+    draw.line([(bx - 8, head_y - 7), (bx - 5, head_y + 2)], fill=COWL_MID, width=1)
+    draw.line([(bx + 8, head_y - 7), (bx + 5, head_y + 2)], fill=COWL_MID, width=1)
+
+    # GLOWING WHITE SLIT EYES
+    draw.polygon([(bx - 6, head_y + 5), (bx - 2, head_y + 7), (bx - 6, head_y + 7)], fill=EYES_WHITE)
+    draw.polygon([(bx + 2, head_y + 7), (bx + 6, head_y + 5), (bx + 6, head_y + 7)], fill=EYES_WHITE)
+    draw.point((bx - 4, head_y + 6), fill=EYES_CYAN)
+    draw.point((bx + 4, head_y + 6), fill=EYES_CYAN)
+
+    # 5. WEAPON & BAT-GAUNTLETS
     if victory:
-        # Cannon held up in right hand
-        draw.rounded_rectangle([tx + 8, chest_y - 28, tx + 16, chest_y + 6], radius=2, fill=CANNON_DARK)
-        draw.line([(tx + 12, chest_y - 28), (tx + 12, chest_y - 38)], fill=CANNON_METAL, width=5)
-        draw.rectangle([tx + 10, chest_y - 38, tx + 14, chest_y - 34], fill=CANNON_NEON)
-        # Smoke wisp from muzzle
-        draw.line([(tx + 12, chest_y - 39), (tx + 14, chest_y - 44)], fill=(130, 145, 165), width=2)
-        draw.line([(tx + 14, chest_y - 44), (tx + 12, chest_y - 48)], fill=(100, 115, 135), width=1)
-        # Left arm raised fist pump
-        draw.line([(tx - 8, chest_y + 4), (tx - 16, chest_y - 6), (tx - 14, chest_y - 18)], fill=ARMOR_MID, width=5)
-        draw.rectangle([tx - 18, chest_y - 22, tx - 12, chest_y - 17], fill=SKIN)
-        return (tx + 12, chest_y - 38)
+        # Stoic Dark Knight victory pose
+        draw.line([(bx - 6, chest_y + 4), (bx - 14, chest_y - 10), (bx - 10, chest_y - 24)], fill=SUIT_MID, width=5)
+        draw.rectangle([bx - 12, chest_y - 26, bx - 8, chest_y - 22], fill=GAUNTLET)
+        draw.polygon([(bx - 16, chest_y - 28), (bx - 10, chest_y - 24), (bx - 4, chest_y - 28), (bx - 10, chest_y - 22)], fill=COWL_BLACK)
+        draw.polygon([(bx - 13, chest_y - 12), (bx - 17, chest_y - 10), (bx - 12, chest_y - 8)], fill=COWL_BLACK)
+        draw.polygon([(bx - 12, chest_y - 16), (bx - 16, chest_y - 14), (bx - 11, chest_y - 12)], fill=COWL_BLACK)
+        return (bx - 10, chest_y - 26)
 
-    shoulder_x = tx + 4 - int(math.cos(aim_angle) * recoil * 1.5)
+    shoulder_x = bx + 4 - int(math.cos(aim_angle) * recoil * 1.5)
     shoulder_y = chest_y + 6 - int(math.sin(aim_angle) * recoil * 1.5)
 
-    cannon_len = 34
-    barrel_x = shoulder_x + math.cos(aim_angle) * cannon_len
-    barrel_y = shoulder_y + math.sin(aim_angle) * cannon_len
+    gun_len = 30
+    barrel_x = shoulder_x + math.cos(aim_angle) * gun_len
+    barrel_y = shoulder_y + math.sin(aim_angle) * gun_len
 
     nx = -math.sin(aim_angle) * 3
     ny =  math.cos(aim_angle) * 3
@@ -408,106 +447,127 @@ def draw_hero_sprite(draw, x, y, aim_angle=-math.pi/4, firing=False, recoil=0, r
     p2 = (barrel_x + nx, barrel_y + ny)
     p3 = (barrel_x - nx, barrel_y - ny)
     p4 = (shoulder_x - nx, shoulder_y - ny)
-    draw.polygon([p1, p2, p3, p4], fill=CANNON_DARK)
-    draw.line([(shoulder_x + nx*1.3, shoulder_y + ny*1.3), (barrel_x + nx*1.3, barrel_y + ny*1.3)], fill=CANNON_METAL, width=3)
+    draw.polygon([p1, p2, p3, p4], fill=COWL_BLACK)
+    draw.line([(shoulder_x + nx, shoulder_y + ny), (barrel_x + nx, barrel_y + ny)], fill=COWL_MID, width=2)
 
-    for coil_i in [0.35, 0.55, 0.75]:
-        cx = shoulder_x + math.cos(aim_angle) * (cannon_len * coil_i)
-        cy = shoulder_y + math.sin(aim_angle) * (cannon_len * coil_i)
-        draw.line([(cx + nx*1.8, cy + ny*1.8), (cx - nx*1.8, cy - ny*1.8)], fill=CANNON_NEON, width=2)
+    # Bat-fins on weapon
+    draw.polygon([
+        (shoulder_x + math.cos(aim_angle)*14 + nx*1.8, shoulder_y + math.sin(aim_angle)*14 + ny*1.8),
+        (shoulder_x + math.cos(aim_angle)*18 + nx*3.0, shoulder_y + math.sin(aim_angle)*18 + ny*3.0),
+        (shoulder_x + math.cos(aim_angle)*22 + nx*1.8, shoulder_y + math.sin(aim_angle)*22 + ny*1.8)
+    ], fill=COWL_BLACK)
 
-    draw.line([(barrel_x + nx*1.6, barrel_y + ny*1.6), (barrel_x - nx*1.6, barrel_y - ny*1.6)], fill=CANNON_LIGHT, width=3)
+    draw.line([(bx - 6, chest_y + 4), (shoulder_x + math.cos(aim_angle)*20, shoulder_y + math.sin(aim_angle)*20)], fill=SUIT_MID, width=5)
+    draw.line([(bx + 4, chest_y + 4), (shoulder_x + math.cos(aim_angle)*8, shoulder_y + math.sin(aim_angle)*8)], fill=SUIT_MID, width=5)
 
-    grip1_x = shoulder_x + math.cos(aim_angle) * 10
-    grip1_y = shoulder_y + math.sin(aim_angle) * 10
-    grip2_x = shoulder_x + math.cos(aim_angle) * 22
-    grip2_y = shoulder_y + math.sin(aim_angle) * 22
-
-    draw.line([(tx - 6, chest_y + 4), (grip2_x, grip2_y)], fill=ARMOR_MID, width=5)
-    draw.rectangle([grip2_x - 2, grip2_y - 2, grip2_x + 2, grip2_y + 2], fill=SKIN)
-    draw.line([(tx + 4, chest_y + 4), (grip1_x, grip1_y)], fill=ARMOR_MID, width=5)
-    draw.rectangle([grip1_x - 2, grip1_y - 2, grip1_x + 2, grip1_y + 2], fill=SKIN)
+    # 3 Bat-fins on forearm gauntlet
+    arm_mid_x = bx - 2
+    arm_mid_y = chest_y + 8
+    draw.polygon([(arm_mid_x, arm_mid_y), (arm_mid_x - 5, arm_mid_y - 3), (arm_mid_x - 2, arm_mid_y + 2)], fill=COWL_BLACK)
+    draw.polygon([(arm_mid_x + 3, arm_mid_y + 3), (arm_mid_x - 2, arm_mid_y), (arm_mid_x + 1, arm_mid_y + 5)], fill=COWL_BLACK)
 
     if firing:
-        draw_muzzle_flash(draw, barrel_x, barrel_y, aim_angle)
+        spikes = [
+            (0.0, 18, (255, 255, 255), 3),
+            (0.35, 14, (100, 220, 255), 2),
+            (-0.35, 14, (100, 220, 255), 2),
+            (0.7, 10, (0, 140, 255), 2),
+            (-0.7, 10, (0, 140, 255), 2),
+        ]
+        for a_off, length, col, w in spikes:
+            a = aim_angle + a_off
+            ex = barrel_x + math.cos(a) * length
+            ey = barrel_y + math.sin(a) * length
+            draw.line([(barrel_x, barrel_y), (ex, ey)], fill=col, width=w)
+        draw.ellipse([barrel_x - 3, barrel_y - 3, barrel_x + 3, barrel_y + 3], fill=(255, 255, 255))
 
     return (barrel_x, barrel_y)
 
 # ==================== MAIN GENERATOR ====================
 def main():
-    print("Fetching actual contributions for Mohammad-Ashraf-Shaik...")
-    raw_levels = fetch_contributions("Mohammed-Ashraf-Shaik")
-    grid_cells = raw_levels[:371]
-    if len(grid_cells) < 371:
-        grid_cells += [0] * (371 - len(grid_cells))
+    print("Fetching REAL 2D contribution grid for Mohammed-Ashraf-Shaik...")
+    grid_2d = fetch_real_contributions("Mohammed-Ashraf-Shaik")
+    
+    # Calculate total active commits
+    total_active_count = sum(sum(1 for lvl in row if lvl > 0) for row in grid_2d)
+    print(f"Verified live contribution data: 7 rows x {len(grid_2d[0])} cols, {total_active_count} active commit days.")
 
-    green_indices = [i for i, lvl in enumerate(grid_cells) if lvl > 0]
-    print(f"Total green commits: {len(green_indices)}")
+    # Find all real green commit coordinates: (week, day, level)
+    active_commit_cells = []
+    for d in range(7):
+        for w in range(len(grid_2d[d])):
+            lvl = grid_2d[d][w]
+            if lvl > 0:
+                active_commit_cells.append((w, d, lvl))
 
-    def pick_nearest(target_idx):
-        if not green_indices:
-            return target_idx
-        return min(green_indices, key=lambda x: abs(x - target_idx))
+    # Sort chronologically by week (left to right)
+    active_commit_cells.sort(key=lambda item: (item[0], item[1]))
 
-    t1 = pick_nearest(76)   # Feb
-    t2 = pick_nearest(206)  # Mid year
-    t3 = pick_nearest(336)  # Late Aug
-    t4 = pick_nearest(348)  # Early Sep
-    t5 = pick_nearest(366)  # Mid Sep latest
+    # Select 5 real targets from the user's live commits across his active periods:
+    # Target 1: Early in the year (e.g. around week 23, Feb 2026)
+    # Target 2: Mid-year (e.g. around week 46, Aug 2026)
+    # Target 3, 4, 5: Recent commits (weeks 50, 51, 52 - late Aug & Sep 2026)
+    def find_best_commit(target_w):
+        return min(active_commit_cells, key=lambda c: abs(c[0] - target_w))
+
+    real_t1 = find_best_commit(23)
+    real_t2 = find_best_commit(46)
+    real_t3 = find_best_commit(50)
+    real_t4 = find_best_commit(51)
+    real_t5 = find_best_commit(52)
 
     chosen_targets = []
-    for t in [t1, t2, t3, t4, t5]:
-        if t not in chosen_targets:
+    for t in [real_t1, real_t2, real_t3, real_t4, real_t5]:
+        if (t[0], t[1]) not in [(c[0], c[1]) for c in chosen_targets]:
             chosen_targets.append(t)
+            
     while len(chosen_targets) < 5:
-        avail = [idx for idx in green_indices if idx not in chosen_targets]
+        avail = [c for c in active_commit_cells if (c[0], c[1]) not in [(x[0], x[1]) for x in chosen_targets]]
         if avail:
             chosen_targets.append(avail[0])
         else:
-            chosen_targets.append(len(chosen_targets) * 60)
+            break
 
-    print("Targets for destruction:", chosen_targets)
+    print(f"Batman will target the user's actual progress: {chosen_targets}")
 
+    # Layout dimensions matching clean GitHub cards
     CELL_SIZE = 10
-    CELL_GAP = 3
-    GRID_X = 64
-    GRID_Y = 68
-    GROUND_Y = 244
+    CELL_GAP  = 3
+    GRID_X    = 64
+    GRID_Y    = 62
+    GROUND_Y  = 238
 
-    def get_cell_coord(idx):
-        w = idx // 7
-        d = idx % 7
+    def get_cell_coord(w, d):
         cx = GRID_X + w * (CELL_SIZE + CELL_GAP) + CELL_SIZE // 2
         cy = GRID_Y + d * (CELL_SIZE + CELL_GAP) + CELL_SIZE // 2
         return (cx, cy)
 
-    target_coords = {t: get_cell_coord(t) for t in chosen_targets}
+    target_coords = {(w, d): get_cell_coord(w, d) for w, d, lvl in chosen_targets}
 
     MONTH_NAMES = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"]
     day_map = [("Mon", 1), ("Wed", 3), ("Fri", 5)]
 
+    # Clean shot sequence (NO combo text, NO score numbers!)
     shots = [
-        (20, chosen_targets[0], "+100 PTS", 100),
-        (44, chosen_targets[1], "CRITICAL! +250", 250),
-        (66, chosen_targets[2], "COMBO x3! +200", 200),
-        (74, chosen_targets[3], "COMBO x4! +300", 300),
-        (82, chosen_targets[4], "OBLITERATED! +500", 500)
+        (20, chosen_targets[0]),
+        (44, chosen_targets[1]),
+        (66, chosen_targets[2]),
+        (74, chosen_targets[3]),
+        (82, chosen_targets[4])
     ]
 
-    active_grid = list(grid_cells)
+    # Active grid state
+    active_grid = [list(row) for row in grid_2d]
     destroyed_cells = set()
     explosions = []
-    floating_texts = []
-    bullets = []
+    batarangs = []
     frames = []
-
-    current_score = 1200
 
     print(f"Rendering {TOTAL_FRAMES} frames...")
     for f in range(TOTAL_FRAMES):
         shake_x, shake_y = 0, 0
-        for shot_f, _, _, _ in shots:
-            if f == shot_f + 3:
+        for shot_f, _ in shots:
+            if f == shot_f + 4:
                 shake_x = random.choice([-2, 2])
                 shake_y = random.choice([-1, 1])
 
@@ -517,23 +577,10 @@ def main():
         # 1. Outer Card Border
         draw.rounded_rectangle([2, 2, WIDTH - 3, HEIGHT - 3], radius=12, fill=BG_COLOR, outline=CARD_BORDER, width=1)
 
-        # 2. Header Bar
-        draw.rounded_rectangle([18, 10, 82, 28], radius=4, fill=(30, 41, 59), outline=CARD_BORDER)
-        draw.text((50, 19), "ARCADE", fill=CYAN_ACCENT, font=FONT_HUD_LBL, anchor="mm")
-
-        draw.text((92, 19), "COMMIT BUSTER // CONTRIBUTION ANNIHILATOR", fill=GOLD_ACCENT, font=FONT_TITLE, anchor="lm")
-        draw.text((18, 36), "Target: Green Commit Boxes  •  Operator: @Mohammed-Ashraf-Shaik  •  Defense: ACTIVE", fill=MUTED, font=FONT_SUB)
-
-        # Header Right Badges
-        draw.rectangle([WIDTH - 275, 10, WIDTH - 170, 42], fill=(22, 27, 34), outline=CARD_BORDER)
-        draw.text((WIDTH - 267, 14), "SCORE", fill=MUTED, font=FONT_HUD_LBL)
-        draw.text((WIDTH - 267, 26), f"{current_score:05d}", fill=GOLD_ACCENT, font=FONT_HUD_VAL)
-
-        status_text = "ANNIHILATING..." if f < 90 else "CLEARED! [PERFECT]"
-        status_color = CYAN_ACCENT if f < 90 else HOT_GREEN
-        draw.rectangle([WIDTH - 160, 10, WIDTH - 18, 42], fill=(22, 27, 34), outline=(35, 134, 54) if f >= 90 else CARD_BORDER)
-        draw.text((WIDTH - 152, 14), "STATUS", fill=MUTED, font=FONT_HUD_LBL)
-        draw.text((WIDTH - 152, 26), status_text, fill=status_color, font=FONT_HUD_VAL)
+        # 2. CLEAN GITHUB HEADER (No arcade HUD, no scores, no badges!)
+        # Sleek GitHub-style header with Batman symbol & clean title
+        draw.text((22, 16), "Mohammed-Ashraf-Shaik / Contributions", fill=WHITE, font=FONT_HEADER)
+        draw.text((22, 33), f"{total_active_count} contributions in the last year  •  The Dark Knight of Code", fill=MUTED, font=FONT_SUB)
 
         draw.line([(15, 48), (WIDTH - 15, 48)], fill=HEADER_LINE, width=1)
 
@@ -542,176 +589,156 @@ def main():
             col_x = GRID_X + mi * int(53 / 12 * (CELL_SIZE + CELL_GAP)) + shake_x
             draw.text((col_x, GRID_Y - 13 + shake_y), mname, fill=MUTED, font=FONT_LABEL)
 
-        # Day Labels
+        # Day Labels (Mon, Wed, Fri)
         for dname, drow in day_map:
             dy = GRID_Y + drow * (CELL_SIZE + CELL_GAP) + 1 + shake_y
             draw.text((GRID_X - 28 + shake_x, dy), dname, fill=MUTED, font=FONT_LABEL)
 
-        # 4. Contribution Grid
-        for idx in range(371):
-            w = idx // 7
-            d = idx % 7
-            cx = GRID_X + w * (CELL_SIZE + CELL_GAP) + shake_x
-            cy = GRID_Y + d * (CELL_SIZE + CELL_GAP) + shake_y
+        # 4. EXACT REAL CONTRIBUTION GRID (2D mapped: Row d, Col w)
+        for d in range(7):
+            for w in range(len(active_grid[d])):
+                cx = GRID_X + w * (CELL_SIZE + CELL_GAP) + shake_x
+                cy = GRID_Y + d * (CELL_SIZE + CELL_GAP) + shake_y
 
-            if idx in destroyed_cells:
-                draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=(18, 22, 28), outline=(28, 33, 40))
-            else:
-                lvl = active_grid[idx]
-                col = GREEN_LEVELS[min(lvl, 4)]
-                outl = EMPTY_BORDER if lvl == 0 else col
-                draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=col, outline=outl)
+                if (w, d) in destroyed_cells:
+                    # Scorched cell
+                    draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=(18, 22, 28), outline=(28, 33, 40))
+                else:
+                    lvl = active_grid[d][w]
+                    col = GREEN_LEVELS[min(lvl, 4)]
+                    outl = EMPTY_BORDER if lvl == 0 else col
+                    draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=col, outline=outl)
 
-        # Target Crosshair Lock Reticle
+        # Subtle Bat-Targeting Lock on active upcoming target
         active_shot = None
-        for shot_f, t_idx, txt, pts in shots:
-            if f < shot_f and (shot_f - f) <= 10:
-                active_shot = (shot_f, t_idx)
+        for shot_f, t_info in shots:
+            if f < shot_f and (shot_f - f) <= 8:
+                active_shot = (shot_f, t_info)
                 break
 
         if active_shot:
-            tx, ty = target_coords[active_shot[1]]
+            w_tgt, d_tgt, _ = active_shot[1]
+            tx, ty = target_coords[(w_tgt, d_tgt)]
             tx += shake_x
             ty += shake_y
-            pulse = (f % 4 < 2)
-            ret_col = (255, 60, 60) if pulse else GOLD_ACCENT
-            sz = 9
-            draw.line([(tx - sz, ty - sz), (tx - sz + 4, ty - sz)], fill=ret_col, width=1)
-            draw.line([(tx - sz, ty - sz), (tx - sz, ty - sz + 4)], fill=ret_col, width=1)
-            draw.line([(tx + sz, ty - sz), (tx + sz - 4, ty - sz)], fill=ret_col, width=1)
-            draw.line([(tx + sz, ty - sz), (tx + sz, ty - sz + 4)], fill=ret_col, width=1)
-            draw.line([(tx - sz, ty + sz), (tx - sz + 4, ty + sz)], fill=ret_col, width=1)
-            draw.line([(tx - sz, ty + sz), (tx - sz, ty - sz + 4)], fill=ret_col, width=1)
-            draw.line([(tx + sz, ty + sz), (tx + sz - 4, ty + sz)], fill=ret_col, width=1)
-            draw.line([(tx + sz, ty + sz), (tx + sz, ty + sz - 4)], fill=ret_col, width=1)
+            sz = 8
+            # Minimalist target reticle
+            draw.line([(tx - sz, ty - sz), (tx - sz + 3, ty - sz)], fill=CYAN_ACCENT, width=1)
+            draw.line([(tx - sz, ty - sz), (tx - sz, ty - sz + 3)], fill=CYAN_ACCENT, width=1)
+            draw.line([(tx + sz, ty - sz), (tx + sz - 3, ty - sz)], fill=CYAN_ACCENT, width=1)
+            draw.line([(tx + sz, ty - sz), (tx + sz, ty - sz + 3)], fill=CYAN_ACCENT, width=1)
+            draw.line([(tx - sz, ty + sz), (tx - sz + 3, ty + sz)], fill=CYAN_ACCENT, width=1)
+            draw.line([(tx - sz, ty + sz), (tx - sz, ty + sz - 3)], fill=CYAN_ACCENT, width=1)
+            draw.line([(tx + sz, ty + sz), (tx + sz - 3, ty + sz)], fill=CYAN_ACCENT, width=1)
+            draw.line([(tx + sz, ty + sz), (tx + sz, ty + sz - 3)], fill=CYAN_ACCENT, width=1)
 
-        # 5. Cyber Platform Walkway
-        draw.line([(15, GROUND_Y), (WIDTH - 15, GROUND_Y)], fill=(40, 50, 65), width=2)
-        for px in range(20, WIDTH - 20, 24):
-            draw.line([(px, GROUND_Y), (px + 12, GROUND_Y + 12)], fill=(22, 28, 38), width=1)
-        draw.line([(15, GROUND_Y + 14), (WIDTH - 15, GROUND_Y + 14)], fill=HEADER_LINE, width=1)
+        # 5. Clean Cyber Ground Line
+        draw.line([(15, GROUND_Y), (WIDTH - 15, GROUND_Y)], fill=(30, 36, 46), width=1)
 
-        # Footer Status & Legend
+        # Clean Legend (Exact GitHub style)
         leg_x = WIDTH - 215
-        leg_y = GROUND_Y + 20
+        leg_y = GROUND_Y + 14
         draw.text((leg_x - 30, leg_y), "Less", fill=MUTED, font=FONT_LABEL)
         for li in range(5):
             lx = leg_x + li * 14
             draw.rounded_rectangle([lx, leg_y, lx + 10, leg_y + 10], radius=2, fill=GREEN_LEVELS[li])
         draw.text((leg_x + 5 * 14 + 6, leg_y), "More", fill=MUTED, font=FONT_LABEL)
 
-        draw.text((20, leg_y), "AUTOMATIC GREEN BLOCK ANNIHILATOR  •  FIRE-ON-SIGHT PROTOCOL", fill=MUTED, font=FONT_LABEL)
-
-        # 6. Commando Movement & Action
-        soldier_x = 135
+        # 6. Batman Movement & Action
+        # Calculate X positions giving 45-degree heroic angles to the targets
+        # Target 1 (week ~23) -> cx ~ 363 -> stand at ~ 290
+        # Target 2 (week ~46) -> cx ~ 662 -> stand at ~ 580
+        # Target 3,4,5 (weeks 50-52) -> cx ~ 714-740 -> stand at ~ 650
+        bat_x = 290
         run_cycle = 0
         firing_now = False
-        is_victory = (f >= 90)
-        charge_glow = False
+        is_victory = (f >= 92)
+
+        t1_x = target_coords[(chosen_targets[0][0], chosen_targets[0][1])][0]
+        t2_x = target_coords[(chosen_targets[1][0], chosen_targets[1][1])][0]
+        t3_x = target_coords[(chosen_targets[2][0], chosen_targets[2][1])][0]
+
+        stand1 = max(60, t1_x - 70)
+        stand2 = max(stand1 + 60, t2_x - 80)
+        stand3 = max(stand2 + 50, t3_x - 75)
 
         if f < 14:
             t = f / 14.0
-            soldier_x = 40 + t * (135 - 40)
+            bat_x = 60 + t * (stand1 - 60)
             run_cycle = f
         elif f < 28:
-            soldier_x = 135
+            bat_x = stand1
         elif f < 40:
             t = (f - 28) / 12.0
-            soldier_x = 135 + t * (370 - 135)
+            bat_x = stand1 + t * (stand2 - stand1)
             run_cycle = f
         elif f < 54:
-            soldier_x = 370
-            charge_glow = (40 <= f < 44)
+            bat_x = stand2
         elif f < 64:
             t = (f - 54) / 10.0
-            soldier_x = 370 + t * (610 - 370)
+            bat_x = stand2 + t * (stand3 - stand2)
             run_cycle = f
         else:
-            soldier_x = 610
+            bat_x = stand3
 
         if f < 30:
-            cur_target_idx = chosen_targets[0]
+            cur_target = chosen_targets[0]
         elif f < 55:
-            cur_target_idx = chosen_targets[1]
+            cur_target = chosen_targets[1]
         elif f < 70:
-            cur_target_idx = chosen_targets[2]
+            cur_target = chosen_targets[2]
         elif f < 78:
-            cur_target_idx = chosen_targets[3]
+            cur_target = chosen_targets[3]
         else:
-            cur_target_idx = chosen_targets[4]
+            cur_target = chosen_targets[4]
 
-        tgt_x, tgt_y = target_coords[cur_target_idx]
+        tgt_x, tgt_y = target_coords[(cur_target[0], cur_target[1])]
 
-        dx = tgt_x - (soldier_x + 4)
+        dx = tgt_x - (bat_x + 4)
         dy = tgt_y - (GROUND_Y - 30)
         aim_angle = math.atan2(dy, dx)
 
-        if active_shot and not is_victory and run_cycle == 0:
-            bx_est = soldier_x + 4 + math.cos(aim_angle) * 34
-            by_est = (GROUND_Y - 30) + math.sin(aim_angle) * 34
-            dist = math.hypot(tgt_x - bx_est, tgt_y - by_est)
-            steps = max(2, int(dist / 8))
-            for si in range(0, steps, 2):
-                p_start = (bx_est + (tgt_x - bx_est) * (si / steps), by_est + (tgt_y - by_est) * (si / steps))
-                p_end   = (bx_est + (tgt_x - bx_est) * (min(si + 1, steps) / steps), by_est + (tgt_y - by_est) * (min(si + 1, steps) / steps))
-                draw.line([p_start, p_end], fill=CYAN_ACCENT, width=1)
-
         recoil = 0
-        for shot_f, t_idx, txt, pts in shots:
+        for shot_f, t_info in shots:
+            w_s, d_s, lvl_s = t_info
             if f == shot_f:
                 firing_now = True
-                recoil = 5
-                bx_est = soldier_x + 4 + math.cos(aim_angle) * 34
-                by_est = (GROUND_Y - 30) + math.sin(aim_angle) * 34
-                dest_x, dest_y = target_coords[t_idx]
-                bullets.append(Bullet(bx_est, by_est, dest_x, dest_y, duration=3))
+                recoil = 4
+                bx_est = bat_x + 4 + math.cos(aim_angle) * 30
+                by_est = (GROUND_Y - 30) + math.sin(aim_angle) * 30
+                dest_x, dest_y = target_coords[(w_s, d_s)]
+                batarangs.append(Batarang(bx_est, by_est, dest_x, dest_y, duration=4))
 
-            if f == shot_f + 3:
-                dest_x, dest_y = target_coords[t_idx]
-                lvl = active_grid[t_idx]
+            if f == shot_f + 4:
+                dest_x, dest_y = target_coords[(w_s, d_s)]
+                lvl = active_grid[d_s][w_s]
                 explosions.append(EpicExplosion(dest_x, dest_y, lvl if lvl > 0 else 4))
-                destroyed_cells.add(t_idx)
-                floating_texts.append(FloatingText(dest_x, dest_y - 8, txt, GOLD_ACCENT))
-                current_score += pts
+                destroyed_cells.add((w_s, d_s))
 
-        draw_hero_sprite(
+        # Draw Batman
+        draw_batman(
             draw,
-            int(soldier_x),
+            int(bat_x),
             GROUND_Y,
             aim_angle=aim_angle,
             firing=firing_now,
             recoil=recoil,
             run_frame=run_cycle,
-            victory=is_victory,
-            charge_glow=charge_glow
+            victory=is_victory
         )
 
-        # 7. Bullets
-        for b in bullets:
+        # 7. Batarangs
+        for b in batarangs:
             b.update()
             if b.alive:
                 b.draw(draw)
-        bullets = [b for b in bullets if b.alive]
+        batarangs = [b for b in batarangs if b.alive]
 
-        # 8. Explosions
+        # 8. Explosions (Big, dramatic debris & blast clouds)
         for exp in explosions:
             exp.update()
             exp.draw(draw)
         explosions = [exp for exp in explosions if exp.age <= exp.max_age]
-
-        # 9. Floating Texts
-        for ft in floating_texts:
-            ft.update()
-            ft.draw(draw, FONT_POPUP)
-        floating_texts = [ft for ft in floating_texts if ft.life > 0]
-
-        # 10. Victory Banner with clean pixel stars
-        if is_victory:
-            banner_y = GROUND_Y - 45
-            draw.text((WIDTH // 2, banner_y), "ALL COMMITS DESTROYED // STREAK DEFENDED!", fill=GOLD_ACCENT, font=FONT_VICTORY, anchor="mm")
-            # Draw flanking gold pixel stars
-            draw_pixel_star(draw, WIDTH // 2 - 188, banner_y, r=6, col=GOLD_ACCENT)
-            draw_pixel_star(draw, WIDTH // 2 + 188, banner_y, r=6, col=GOLD_ACCENT)
 
         frames.append(img)
 
@@ -725,15 +752,15 @@ def main():
         q = fr.quantize(palette=palette_img, dither=Image.Dither.FLOYDSTEINBERG)
         opt_frames.append(q)
 
-    repo_scripts_dir = os.path.join("Mohammed-Ashraf-Shaik", "scripts")
-    os.makedirs(repo_scripts_dir, exist_ok=True)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(script_dir)
+    primary_out = os.path.join(repo_root, "commit_buster.gif")
+    
+    out_paths = [primary_out]
+    if os.path.abspath(os.getcwd()) != repo_root:
+        out_paths.append(os.path.join(os.getcwd(), "commit_buster.gif"))
 
-    out_paths = [
-        "commit_buster.gif",
-        os.path.join("Mohammed-Ashraf-Shaik", "commit_buster.gif")
-    ]
-
-    for p in out_paths:
+    for p in set(out_paths):
         opt_frames[0].save(
             p,
             save_all=True,

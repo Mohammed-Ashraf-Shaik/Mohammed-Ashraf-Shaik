@@ -68,10 +68,10 @@
 
 ---
 
-## 👾 GitHub Contribution Buster // Commit Destroyer
+## 🦇 GitHub Contribution Buster // The Dark Knight of Code
 
 <p align="center">
-  <img src="commit_buster.gif" alt="Mohammad Ashraf Shaik Contribution Buster - Commit Destroyer" width="100%" />
+  <img src="commit_buster.gif" alt="Mohammad Ashraf Shaik - The Dark Knight GitHub Contribution Buster" width="100%" />
 </p>
 
 ---
