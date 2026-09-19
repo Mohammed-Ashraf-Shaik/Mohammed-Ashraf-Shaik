@@ -8,8 +8,8 @@
 </p>
 
 <p align="center">
-  <a href="https://leetcode.com/u/Shaik_mohameed_Ashraf/">
-    <img src="https://img.shields.io/badge/LeetCode-Shaik__mohameed__Ashraf-FFA116?style=for-the-badge&logo=leetcode&logoColor=black" alt="LeetCode" />
+  <a href="https://leetcode.com/u/Shaik_mohammed_Ashraf/">
+    <img src="https://img.shields.io/badge/LeetCode-Shaik__mohammed__Ashraf-FFA116?style=for-the-badge&logo=leetcode&logoColor=black" alt="LeetCode" />
   </a>
   &nbsp;
   <a href="https://www.chess.com/member/ashumm">
@@ -30,8 +30,8 @@
 ## &#x1F4BB; Live LeetCode Progress & Heatmap
 
 <p align="center">
-  <a href="https://leetcode.com/u/Shaik_mohameed_Ashraf/">
-    <img src="https://leetcard.jacoblin.cool/Shaik_mohameed_Ashraf?theme=dark&font=Karma&ext=heatmap" alt="Mohammad Ashraf Shaik LeetCode Stats Card" />
+  <a href="https://leetcode.com/u/Shaik_mohammed_Ashraf/">
+    <img src="https://leetcard.jacoblin.cool/Shaik_mohammed_Ashraf?theme=dark&font=Karma&ext=heatmap" alt="Mohammad Ashraf Shaik LeetCode Stats Card" />
   </a>
 </p>
 
