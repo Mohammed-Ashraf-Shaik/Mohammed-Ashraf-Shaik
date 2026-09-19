@@ -1,6 +1,7 @@
-<p align="center">
-  <img src="name_banner.svg?v=3" alt="Hi there, I'm Mohammad Ashraf Shaik" width="720" />
-</p>
+<h1 align="center">
+  <img src="name_banner.svg?v=4" alt="Typing SVG" width="700" />
+  <br/>&#x1F44B;
+</h1>
 
 <p align="center">
   <b>Full-Stack Web Developer &#x1F4BB; &nbsp;|&nbsp; Problem Solver &#x1F9E9; &nbsp;|&nbsp; Competitive Chess Player &#x265F;&#xFE0F;</b>
