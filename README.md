@@ -62,7 +62,7 @@
 
 <p align="center">
   <a href="https://mohammed-ashraf-shaik.github.io/Mohammed-Ashraf-Shaik/" target="_blank">
-    <img src="chess_rating_graph.svg?v=4" alt="Chess.com All-Time Rating Progression Graph" width="100%" />
+    <img src="chess_rating_graph.svg?v=5" alt="Chess.com All-Time Rating Progression Graph" width="100%" />
   </a>
 </p>
 

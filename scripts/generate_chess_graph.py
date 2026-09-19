@@ -2,6 +2,7 @@ import urllib.request
 import json
 import datetime
 import os
+import math
 
 USERNAME = "ashumm"
 ARCHIVES_URL = f"https://api.chess.com/pub/player/{USERNAME}/games/archives"
@@ -11,40 +12,42 @@ def fetch_json(url):
     with urllib.request.urlopen(req) as response:
         return json.loads(response.read().decode("utf-8"))
 
-def downsample(points, target=120):
-    """Keep ~target evenly-spaced points + always keep first, last, and peak."""
+def downsample(points, target=150):
     if len(points) <= target:
         return points
     ratings = [p["r"] for p in points]
     peak_idx = ratings.index(max(ratings))
     step = len(points) / target
-    kept = set()
-    kept.add(0)
-    kept.add(len(points) - 1)
-    kept.add(peak_idx)
+    kept = set([0, len(points)-1, peak_idx])
     i = 0.0
     while i < len(points):
         kept.add(int(i))
         i += step
     return [points[i] for i in sorted(kept)]
 
-def build_smooth_path(pts_xy):
-    """Build a smooth cubic bezier path through points."""
+def catmull_rom_to_bezier(pts_xy):
+    """Convert Catmull-Rom spline to SVG cubic bezier path — ultra-smooth curves."""
     if len(pts_xy) < 2:
         return ""
-    cmds = [f"M {pts_xy[0][0]:.1f} {pts_xy[0][1]:.1f}"]
-    for i in range(1, len(pts_xy)):
-        x0, y0 = pts_xy[i-1]
-        x1, y1 = pts_xy[i]
-        cx = (x0 + x1) / 2
-        cmds.append(f"C {cx:.1f} {y0:.1f} {cx:.1f} {y1:.1f} {x1:.1f} {y1:.1f}")
+    n = len(pts_xy)
+    cmds = [f"M {pts_xy[0][0]:.2f} {pts_xy[0][1]:.2f}"]
+    for i in range(n - 1):
+        p0 = pts_xy[max(i-1, 0)]
+        p1 = pts_xy[i]
+        p2 = pts_xy[i+1]
+        p3 = pts_xy[min(i+2, n-1)]
+        tension = 0.4
+        cp1x = p1[0] + (p2[0] - p0[0]) * tension
+        cp1y = p1[1] + (p2[1] - p0[1]) * tension
+        cp2x = p2[0] - (p3[0] - p1[0]) * tension
+        cp2y = p2[1] - (p3[1] - p1[1]) * tension
+        cmds.append(f"C {cp1x:.2f} {cp1y:.2f} {cp2x:.2f} {cp2y:.2f} {p2[0]:.2f} {p2[1]:.2f}")
     return " ".join(cmds)
 
 def main():
     print(f"Fetching archives for {USERNAME}...")
     archives_data = fetch_json(ARCHIVES_URL)
     archives = archives_data.get("archives", [])
-    
     all_points = []
 
     for archive_url in archives:
@@ -56,26 +59,21 @@ def main():
                     w = g.get("white", {})
                     b = g.get("black", {})
                     if w.get("username", "").lower() == USERNAME.lower():
-                        r = w.get("rating")
-                        opp = b.get("username", "Opponent")
-                        res = w.get("result", "")
+                        r, opp, res = w.get("rating"), b.get("username","Opp"), w.get("result","")
                     elif b.get("username", "").lower() == USERNAME.lower():
-                        r = b.get("rating")
-                        opp = w.get("username", "Opponent")
-                        res = b.get("result", "")
+                        r, opp, res = b.get("rating"), w.get("username","Opp"), b.get("result","")
                     else:
                         continue
                     if t and r:
                         all_points.append({"t": t, "r": r, "opp": opp, "res": res})
         except Exception as e:
-            print(f"Error fetching {archive_url}: {e}")
-            
+            print(f"Skip {archive_url}: {e}")
+
     if not all_points:
-        print("No rapid points found.")
+        print("No points found.")
         return
 
     all_points.sort(key=lambda x: x["t"])
-    
     total_games = len(all_points)
     ratings_all = [p["r"] for p in all_points]
     r_curr = ratings_all[-1]
@@ -84,206 +82,295 @@ def main():
     r_gain = r_curr - r_start
     peak_idx_full = ratings_all.index(r_peak)
     peak_t = all_points[peak_idx_full]["t"]
-    
-    # Downsample to ~120 points for SVG rendering
-    svg_points = downsample(all_points, target=120)
-    print(f"Total games: {total_games}, SVG points: {len(svg_points)}")
 
-    timestamps = [p["t"] for p in svg_points]
+    svg_points = downsample(all_points, target=150)
+    print(f"Total games: {total_games} -> SVG pts: {len(svg_points)}")
+
+    # --- Layout ---
+    W, H = 900, 420
+    ML, MR, MT, MB = 70, 40, 120, 60
+    CW = W - ML - MR
+    CH = H - MT - MB
+    BY = MT + CH  # bottom Y
+
     t_min = all_points[0]["t"]
     t_max = all_points[-1]["t"]
-    if t_min == t_max:
-        t_max += 1
+    if t_min == t_max: t_max += 1
 
-    # Dimensions
-    svg_w = 880
-    svg_h = 390
-    m_left = 65
-    m_right = 35
-    m_top = 110
-    m_bottom = 55
-    chart_w = svg_w - m_left - m_right
-    chart_h = svg_h - m_top - m_bottom
-    y_min_val = max(200, r_start - 100)
-    y_max_val = r_peak + 120
-    bottom_y = m_top + chart_h
+    r_lo = max(100, r_start - 80)
+    r_hi = r_peak + 150
 
-    def get_x(t):
-        return m_left + ((t - t_min) / (t_max - t_min)) * chart_w
-    def get_y(r):
-        return (m_top + chart_h) - ((r - y_min_val) / (y_max_val - y_min_val)) * chart_h
+    def gx(t): return ML + (t - t_min) / (t_max - t_min) * CW
+    def gy(r): return BY - (r - r_lo) / (r_hi - r_lo) * CH
 
-    pts_xy = [(get_x(p["t"]), get_y(p["r"])) for p in svg_points]
+    pts_xy = [(gx(p["t"]), gy(p["r"])) for p in svg_points]
+    line_path = catmull_rom_to_bezier(pts_xy)
+    area_path = f"{line_path} L {pts_xy[-1][0]:.2f} {BY} L {pts_xy[0][0]:.2f} {BY} Z"
+    path_len = int(CW * 2.2)
 
-    # Smooth bezier path
-    line_path = build_smooth_path(pts_xy)
+    # Key coords
+    peak_x, peak_y = gx(peak_t), gy(r_peak)
+    curr_x, curr_y = gx(all_points[-1]["t"]), gy(r_curr)
+    start_x, start_y = pts_xy[0]
 
-    # Closed area path
-    first_x = pts_xy[0][0]
-    last_x = pts_xy[-1][0]
-    area_path = f"{line_path} L {last_x:.1f} {bottom_y:.1f} L {first_x:.1f} {bottom_y:.1f} Z"
-
-    # Path length estimate (for dasharray)
-    path_len = int(chart_w * 1.5)
-
-    # Grid lines
-    y_grid_values = []
-    step = (y_max_val - y_min_val) / 5
-    for i in range(6):
-        val = int(y_min_val + i * step)
-        y_grid_values.append(val)
-
-    y_grid_lines = []
-    for val in y_grid_values:
-        yp = get_y(val)
-        y_grid_lines.append(f"""
-        <line x1="{m_left}" y1="{yp:.1f}" x2="{m_left + chart_w}" y2="{yp:.1f}" stroke="#2d333b" stroke-width="1" stroke-dasharray="4 4" />
-        <text x="{m_left - 10}" y="{yp + 4:.1f}" text-anchor="end" fill="#768390" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="11" font-weight="600">{val}</text>
-        """)
-
-    x_grid_lines = []
-    for step_i in range(7):
-        tick_t = t_min + (t_max - t_min) * (step_i / 6)
-        tick_x = get_x(tick_t)
+    # Date labels
+    dates = []
+    for i in range(7):
+        tick_t = t_min + (t_max - t_min) * i / 6
+        tx = gx(tick_t)
         dt = datetime.datetime.fromtimestamp(tick_t, datetime.timezone.utc)
-        date_str = dt.strftime("%b '%y")
-        x_grid_lines.append(f"""
-        <line x1="{tick_x:.1f}" y1="{m_top}" x2="{tick_x:.1f}" y2="{bottom_y:.1f}" stroke="#21262d" stroke-width="1" />
-        <text x="{tick_x:.1f}" y="{bottom_y + 22:.1f}" text-anchor="middle" fill="#768390" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="10" font-weight="600">{date_str}</text>
-        """)
+        dates.append((tx, dt.strftime("%b'%y")))
 
-    # Key points
-    peak_x = get_x(peak_t)
-    peak_y = get_y(r_peak)
-    curr_x = get_x(all_points[-1]["t"])
-    curr_y = get_y(r_curr)
-    start_x = pts_xy[0][0]
-    start_y = pts_xy[0][1]
+    # Y grid
+    y_ticks = []
+    step_r = (r_hi - r_lo) / 5
+    for i in range(6):
+        val = int(r_lo + i * step_r)
+        y_ticks.append((val, gy(val)))
 
-    # Callout badge positions
-    peak_bw, peak_bh = 104, 24
-    peak_bx = max(m_left + 5, min(peak_x - 120, svg_w - peak_bw - 10))
-    peak_by = max(m_top - 5, peak_y - 48)
+    # Callout boxes (ensure no overlap)
+    pbw, pbh = 112, 26
+    pbx = max(ML + 5, min(peak_x - 125, W - pbw - 8))
+    pby = max(MT + 2, peak_y - 52)
 
-    curr_bw, curr_bh = 96, 24
-    curr_bx = max(m_left + 5, min(curr_x - 110, svg_w - curr_bw - 10))
-    curr_by = min(bottom_y - 32, curr_y + 38)
+    cbw, cbh = 100, 26
+    cbx = max(ML + 5, min(curr_x - 115, W - cbw - 8))
+    cby = min(BY - 34, curr_y + 40)
+    # if callouts overlap vertically, push current down
+    if abs(pby - cby) < 35 and abs(pbx - cbx) < 120:
+        cby = pby + 48
 
-    svg_content = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {svg_w} {svg_h}" width="100%" height="100%">
-    <defs>
-        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#81b64c" stop-opacity="0.45" />
-            <stop offset="60%" stop-color="#81b64c" stop-opacity="0.10" />
-            <stop offset="100%" stop-color="#81b64c" stop-opacity="0.0" />
-        </linearGradient>
-        <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#3e7d27" />
-            <stop offset="50%" stop-color="#81b64c" />
-            <stop offset="100%" stop-color="#a3d160" />
-        </linearGradient>
-        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-        <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
-            <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.4" />
-        </filter>
-    </defs>
+    # Build chess-board tile pattern (subtle)
+    tile_size = 22
+    tiles = []
+    for row in range(int(H / tile_size) + 1):
+        for col in range(int(W / tile_size) + 1):
+            if (row + col) % 2 == 0:
+                tx = col * tile_size
+                ty = row * tile_size
+                tiles.append(f'<rect x="{tx}" y="{ty}" width="{tile_size}" height="{tile_size}" fill="white" />')
+    tile_svg = "\n        ".join(tiles)
 
-    <!-- Background -->
-    <rect width="{svg_w}" height="{svg_h}" rx="12" fill="#0d1117" stroke="#30363d" stroke-width="1.2" filter="url(#cardShadow)" />
+    # Y grid SVG
+    y_grid_svg = ""
+    for val, yp in y_ticks:
+        y_grid_svg += f"""
+    <line x1="{ML}" y1="{yp:.1f}" x2="{ML+CW}" y2="{yp:.1f}" stroke="#ffffff" stroke-width="0.6" stroke-dasharray="4 6" stroke-opacity="0.08" />
+    <text x="{ML-10}" y="{yp+4:.1f}" text-anchor="end" fill="#6e7681" font-size="11" font-family="'Segoe UI',system-ui,sans-serif" font-weight="600">{val}</text>"""
 
-    <!-- Title -->
-    <g transform="translate(22, 28)">
-        <text font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="17" fill="#f0f6fc">&#9822;&#65039; Chess.com All-Time Rating Progression</text>
-        <text font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="500" font-size="12" fill="#8b949e" y="20">Rapid history across {total_games:,} games  |  @{USERNAME}</text>
-    </g>
+    # X date SVG
+    x_date_svg = ""
+    for i, (tx, label) in enumerate(dates):
+        x_date_svg += f"""
+    <line x1="{tx:.1f}" y1="{MT}" x2="{tx:.1f}" y2="{BY}" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.06" />
+    <text x="{tx:.1f}" y="{BY+22:.1f}" text-anchor="middle" fill="#6e7681" font-size="10" font-family="'Segoe UI',system-ui,sans-serif" font-weight="600">{label}</text>"""
 
-    <!-- KPI Badges -->
-    <g transform="translate({svg_w - 470}, 16)">
-        <g>
-            <rect width="105" height="48" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1" />
-            <text font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#8b949e" x="12" y="17">CURRENT</text>
-            <text font-family="-apple-system,sans-serif" font-size="16" font-weight="800" fill="#81b64c" x="12" y="38">{r_curr}</text>
-        </g>
-        <g transform="translate(115, 0)">
-            <rect width="105" height="48" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1" />
-            <text font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#8b949e" x="12" y="17">PEAK &#127942;</text>
-            <text font-family="-apple-system,sans-serif" font-size="16" font-weight="800" fill="#f1e05a" x="12" y="38">{r_peak}</text>
-        </g>
-        <g transform="translate(230, 0)">
-            <rect width="110" height="48" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1" />
-            <text font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#8b949e" x="12" y="17">GAIN &#128200;</text>
-            <text font-family="-apple-system,sans-serif" font-size="16" font-weight="800" fill="#58a6ff" x="12" y="38">+{r_gain}</text>
-        </g>
-        <g transform="translate(350, 0)">
-            <rect width="105" height="48" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1" />
-            <text font-family="-apple-system,sans-serif" font-size="10" font-weight="600" fill="#8b949e" x="12" y="17">GAMES</text>
-            <text font-family="-apple-system,sans-serif" font-size="16" font-weight="800" fill="#f0f6fc" x="12" y="38">{total_games:,}</text>
-        </g>
-    </g>
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="100%" height="auto" style="max-width:900px">
+  <defs>
 
-    <!-- Grid -->
-    {''.join(y_grid_lines)}
-    {''.join(x_grid_lines)}
+    <!-- Chess tile background pattern -->
+    <pattern id="chessPattern" x="0" y="0" width="{tile_size*2}" height="{tile_size*2}" patternUnits="userSpaceOnUse">
+      <rect width="{tile_size*2}" height="{tile_size*2}" fill="transparent"/>
+      <rect width="{tile_size}" height="{tile_size}" fill="#ffffff" fill-opacity="0.018"/>
+      <rect x="{tile_size}" y="{tile_size}" width="{tile_size}" height="{tile_size}" fill="#ffffff" fill-opacity="0.018"/>
+    </pattern>
 
-    <!-- Baseline -->
-    <line x1="{m_left}" y1="{bottom_y}" x2="{m_left + chart_w}" y2="{bottom_y}" stroke="#30363d" stroke-width="1.2" />
+    <!-- Chart area fill gradient -->
+    <linearGradient id="fillGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#00d26a" stop-opacity="0.35"/>
+      <stop offset="40%"  stop-color="#81b64c" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0d1117" stop-opacity="0"/>
+    </linearGradient>
 
-    <!-- Static ghost trace (always visible) -->
-    <path d="{line_path}" fill="none" stroke="#213524" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4" />
+    <!-- Line stroke gradient -->
+    <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#3ecf8e"/>
+      <stop offset="35%"  stop-color="#81b64c"/>
+      <stop offset="70%"  stop-color="#a8d660"/>
+      <stop offset="100%" stop-color="#58f0a0"/>
+    </linearGradient>
 
-    <!-- Animated area fill -->
-    <path d="{area_path}" fill="url(#chartGradient)">
-        <animate attributeName="opacity" dur="5s" repeatCount="indefinite"
-            keyTimes="0; 0.2; 0.55; 0.85; 0.95; 1"
-            values="0; 0.15; 1; 1; 0; 0"
-            calcMode="linear" />
-    </path>
+    <!-- Background card gradient -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%"   stop-color="#161b22"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
 
-    <!-- Animated wave line -->
-    <path d="{line_path}" fill="none" stroke="url(#lineGradient)" stroke-width="2.8"
-          stroke-linecap="round" stroke-linejoin="round"
-          stroke-dasharray="{path_len}" stroke-dashoffset="{path_len}">
-        <animate attributeName="stroke-dashoffset" dur="5s" repeatCount="indefinite"
-            keyTimes="0; 0.5; 0.85; 0.95; 1"
-            values="{path_len}; 0; 0; {path_len}; {path_len}"
-            keySplines="0.22 1 0.36 1; 0 0 1 1; 0.8 0 1 1; 0 0 1 1"
-            calcMode="spline" />
-    </path>
+    <!-- Glow filter for peak/curr dots -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
 
-    <!-- Start dot -->
-    <circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="4" fill="#4e8d35" stroke="#0d1117" stroke-width="2" />
-    <rect x="{start_x + 7:.1f}" y="{start_y - 12:.1f}" width="72" height="20" rx="5" fill="#161b22" stroke="#30363d" stroke-width="1" />
-    <text x="{start_x + 13:.1f}" y="{start_y + 2:.1f}" fill="#8b949e" font-family="-apple-system,sans-serif" font-size="10" font-weight="700">Start: {r_start}</text>
+    <!-- Stronger glow for peak -->
+    <filter id="peakGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
 
-    <!-- Peak badge (fades in with animation) -->
-    <g>
-        <animate attributeName="opacity" dur="5s" repeatCount="indefinite"
-            keyTimes="0; 0.35; 0.5; 0.85; 0.95; 1"
-            values="0; 0; 1; 1; 0; 0" />
-        <line x1="{peak_bx + peak_bw:.1f}" y1="{peak_by + peak_bh / 2:.1f}" x2="{peak_x:.1f}" y2="{peak_y:.1f}"
-              stroke="#f1e05a" stroke-width="1" stroke-dasharray="3 3" opacity="0.7" />
-        <circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="6" fill="#f1e05a" stroke="#0d1117" stroke-width="2" filter="url(#glow)" />
-        <rect x="{peak_bx:.1f}" y="{peak_by:.1f}" width="{peak_bw}" height="{peak_bh}" rx="6"
-              fill="#1f1e14" stroke="#f1e05a" stroke-width="1.4" />
-        <text x="{peak_bx + peak_bw / 2:.1f}" y="{peak_by + 16:.1f}" text-anchor="middle"
-              fill="#f1e05a" font-family="-apple-system,sans-serif" font-size="11" font-weight="800">Peak: {r_peak} &#127942;</text>
-    </g>
+    <!-- Soft shadow for card -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="116%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
 
-    <!-- Current badge (fades in slightly after peak) -->
-    <g>
-        <animate attributeName="opacity" dur="5s" repeatCount="indefinite"
-            keyTimes="0; 0.45; 0.55; 0.85; 0.95; 1"
-            values="0; 0; 1; 1; 0; 0" />
-        <line x1="{curr_bx + curr_bw:.1f}" y1="{curr_by + curr_bh / 2:.1f}" x2="{curr_x:.1f}" y2="{curr_y:.1f}"
-              stroke="#81b64c" stroke-width="1" stroke-dasharray="3 3" opacity="0.7" />
-        <circle cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="5.5" fill="#a3d160" stroke="#0d1117" stroke-width="2" filter="url(#glow)" />
-        <rect x="{curr_bx:.1f}" y="{curr_by:.1f}" width="{curr_bw}" height="{curr_bh}" rx="6"
-              fill="#102419" stroke="#81b64c" stroke-width="1.4" />
-        <text x="{curr_bx + curr_bw / 2:.1f}" y="{curr_by + 16:.1f}" text-anchor="middle"
-              fill="#a3d160" font-family="-apple-system,sans-serif" font-size="11" font-weight="800">Now: {r_curr}</text>
-    </g>
+    <!-- Line glow -->
+    <filter id="lineGlow" x="-5%" y="-50%" width="110%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+  </defs>
+
+  <!-- ── CARD BACKGROUND ── -->
+  <rect width="{W}" height="{H}" rx="16" fill="url(#bgGrad)" stroke="#30363d" stroke-width="1.2" filter="url(#shadow)"/>
+
+  <!-- Chess tile texture overlay -->
+  <rect width="{W}" height="{H}" rx="16" fill="url(#chessPattern)"/>
+
+  <!-- Accent top border strip -->
+  <rect x="0" y="0" width="{W}" height="3" rx="2" fill="url(#lineGrad)" opacity="0.9"/>
+
+  <!-- ── HEADER ── -->
+  <!-- Chess icon circle -->
+  <circle cx="34" cy="46" r="18" fill="#1c2128" stroke="#30363d" stroke-width="1.2"/>
+  <text x="34" y="52" text-anchor="middle" font-size="18" fill="white">♟</text>
+
+  <!-- Title text -->
+  <text x="62" y="38" font-family="'Segoe UI',system-ui,-apple-system,sans-serif"
+        font-size="18" font-weight="700" fill="#f0f6fc" letter-spacing="-0.3">Chess.com Rating Progression</text>
+  <text x="62" y="57" font-family="'Segoe UI',system-ui,sans-serif"
+        font-size="12" fill="#6e7681">Rapid · {total_games:,} games · @{USERNAME} · Aug 2025 – Sep 2026</text>
+
+  <!-- ── KPI BADGE ROW ── -->
+  <!-- Current Rating -->
+  <g transform="translate({W-430}, 14)">
+    <rect width="96" height="56" rx="10" fill="#1c2128" stroke="#238636" stroke-width="1.2"/>
+    <text x="48" y="20" text-anchor="middle" font-family="'Segoe UI',sans-serif"
+          font-size="9" font-weight="700" fill="#3fb950" letter-spacing="0.8">CURRENT</text>
+    <text x="48" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif"
+          font-size="22" font-weight="900" fill="#3fb950">{r_curr}</text>
+  </g>
+
+  <!-- Peak Rating -->
+  <g transform="translate({W-324}, 14)">
+    <rect width="96" height="56" rx="10" fill="#1c2128" stroke="#9e6a03" stroke-width="1.2"/>
+    <text x="48" y="20" text-anchor="middle" font-family="'Segoe UI',sans-serif"
+          font-size="9" font-weight="700" fill="#d29922" letter-spacing="0.8">PEAK &#9813;</text>
+    <text x="48" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif"
+          font-size="22" font-weight="900" fill="#d29922">{r_peak}</text>
+  </g>
+
+  <!-- Total Gain -->
+  <g transform="translate({W-218}, 14)">
+    <rect width="96" height="56" rx="10" fill="#1c2128" stroke="#1f6feb" stroke-width="1.2"/>
+    <text x="48" y="20" text-anchor="middle" font-family="'Segoe UI',sans-serif"
+          font-size="9" font-weight="700" fill="#58a6ff" letter-spacing="0.8">GAIN &#128200;</text>
+    <text x="48" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif"
+          font-size="22" font-weight="900" fill="#58a6ff">+{r_gain}</text>
+  </g>
+
+  <!-- Games -->
+  <g transform="translate({W-112}, 14)">
+    <rect width="96" height="56" rx="10" fill="#1c2128" stroke="#6e40c9" stroke-width="1.2"/>
+    <text x="48" y="20" text-anchor="middle" font-family="'Segoe UI',sans-serif"
+          font-size="9" font-weight="700" fill="#bc8cff" letter-spacing="0.8">GAMES</text>
+    <text x="48" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif"
+          font-size="22" font-weight="900" fill="#bc8cff">{total_games:,}</text>
+  </g>
+
+  <!-- ── GRID ── -->
+  {y_grid_svg}
+  {x_date_svg}
+
+  <!-- Baseline -->
+  <line x1="{ML}" y1="{BY}" x2="{ML+CW}" y2="{BY}" stroke="#30363d" stroke-width="1.5"/>
+  <line x1="{ML}" y1="{MT}" x2="{ML}" y2="{BY}" stroke="#30363d" stroke-width="1"/>
+
+  <!-- ── CHART ── -->
+
+  <!-- Ghost/static trace (always visible, very faint) -->
+  <path d="{line_path}" fill="none" stroke="#3fb950" stroke-width="1.2"
+        stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>
+
+  <!-- Animated area fill -->
+  <path d="{area_path}" fill="url(#fillGrad)">
+    <animate attributeName="opacity" dur="4.5s" repeatCount="indefinite"
+      keyTimes="0;0.15;0.55;0.82;0.94;1"
+      values="0;0.1;1;1;0;0" calcMode="linear"/>
+  </path>
+
+  <!-- Animated glow duplicate line (blurred, wider) -->
+  <path d="{line_path}" fill="none" stroke="#3ecf8e" stroke-width="5"
+        stroke-linecap="round" stroke-linejoin="round"
+        stroke-dasharray="{path_len}" stroke-dashoffset="{path_len}"
+        opacity="0.35" filter="url(#lineGlow)">
+    <animate attributeName="stroke-dashoffset" dur="4.5s" repeatCount="indefinite"
+      keyTimes="0;0.55;0.82;0.93;1"
+      values="{path_len};0;0;{path_len};{path_len}"
+      keySplines="0.16 1 0.3 1;0 0 1 1;0.7 0 1 1;0 0 1 1"
+      calcMode="spline"/>
+  </path>
+
+  <!-- Main animated wave line -->
+  <path d="{line_path}" fill="none" stroke="url(#lineGrad)" stroke-width="2.8"
+        stroke-linecap="round" stroke-linejoin="round"
+        stroke-dasharray="{path_len}" stroke-dashoffset="{path_len}">
+    <animate attributeName="stroke-dashoffset" dur="4.5s" repeatCount="indefinite"
+      keyTimes="0;0.55;0.82;0.93;1"
+      values="{path_len};0;0;{path_len};{path_len}"
+      keySplines="0.16 1 0.3 1;0 0 1 1;0.7 0 1 1;0 0 1 1"
+      calcMode="spline"/>
+  </path>
+
+  <!-- ── START DOT ── -->
+  <circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="4" fill="#6e7681" stroke="#0d1117" stroke-width="2"/>
+  <rect x="{start_x+7:.1f}" y="{start_y-11:.1f}" width="64" height="20" rx="5"
+        fill="#1c2128" stroke="#30363d" stroke-width="0.8"/>
+  <text x="{start_x+39:.1f}" y="{start_y+3:.1f}" text-anchor="middle"
+        fill="#8b949e" font-family="'Segoe UI',sans-serif" font-size="10" font-weight="700">Start: {r_start}</text>
+
+  <!-- ── PEAK BADGE (animated) ── -->
+  <g>
+    <animate attributeName="opacity" dur="4.5s" repeatCount="indefinite"
+      keyTimes="0;0.38;0.52;0.82;0.93;1"
+      values="0;0;1;1;0;0"/>
+    <!-- leader line -->
+    <line x1="{pbx+pbw:.1f}" y1="{pby+pbh/2:.1f}" x2="{peak_x:.1f}" y2="{peak_y:.1f}"
+          stroke="#d29922" stroke-width="1" stroke-dasharray="3 4" opacity="0.7"/>
+    <!-- glow ring -->
+    <circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="11" fill="#d29922" fill-opacity="0.15" filter="url(#peakGlow)"/>
+    <!-- outer ring -->
+    <circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="7.5" fill="none" stroke="#d29922" stroke-width="1.5" opacity="0.6"/>
+    <!-- core dot -->
+    <circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="5" fill="#d29922" stroke="#0d1117" stroke-width="2" filter="url(#glow)"/>
+    <!-- badge box -->
+    <rect x="{pbx:.1f}" y="{pby:.1f}" width="{pbw}" height="{pbh}" rx="7"
+          fill="#1a1700" stroke="#d29922" stroke-width="1.5"/>
+    <text x="{pbx+pbw/2:.1f}" y="{pby+17:.1f}" text-anchor="middle"
+          fill="#d29922" font-family="'Segoe UI',sans-serif" font-size="11.5" font-weight="800">Peak {r_peak} &#9813;</text>
+  </g>
+
+  <!-- ── CURRENT BADGE (animated) ── -->
+  <g>
+    <animate attributeName="opacity" dur="4.5s" repeatCount="indefinite"
+      keyTimes="0;0.44;0.57;0.82;0.93;1"
+      values="0;0;1;1;0;0"/>
+    <!-- leader line -->
+    <line x1="{cbx+cbw:.1f}" y1="{cby+cbh/2:.1f}" x2="{curr_x:.1f}" y2="{curr_y:.1f}"
+          stroke="#3fb950" stroke-width="1" stroke-dasharray="3 4" opacity="0.7"/>
+    <!-- pulse ring -->
+    <circle cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="10" fill="#3fb950" fill-opacity="0.12" filter="url(#glow)">
+      <animate attributeName="r" dur="1.8s" repeatCount="indefinite" values="6;14;6"/>
+      <animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" values="0.5;0;0.5"/>
+    </circle>
+    <!-- core dot -->
+    <circle cx="{curr_x:.1f}" cy="{curr_y:.1f}" r="5.5" fill="#3fb950" stroke="#0d1117" stroke-width="2.5" filter="url(#glow)"/>
+    <!-- badge box -->
+    <rect x="{cbx:.1f}" y="{cby:.1f}" width="{cbw}" height="{cbh}" rx="7"
+          fill="#091e13" stroke="#238636" stroke-width="1.5"/>
+    <text x="{cbx+cbw/2:.1f}" y="{cby+17:.1f}" text-anchor="middle"
+          fill="#3fb950" font-family="'Segoe UI',sans-serif" font-size="11.5" font-weight="800">Now: {r_curr}</text>
+  </g>
 
 </svg>"""
 
@@ -291,22 +378,19 @@ def main():
     out_dir = os.path.dirname(__file__)
     svg_path = os.path.abspath(os.path.join(out_dir, "..", "chess_rating_graph.svg"))
     with open(svg_path, "w", encoding="utf-8") as f:
-        f.write(svg_content)
-    print(f"SVG saved: {svg_path}  ({len(svg_content)//1024}KB, {len(svg_points)} points)")
+        f.write(svg)
+    print(f"SVG saved: {svg_path}  ({len(svg)//1024}KB, {len(svg_points)} pts)")
 
     # Save full data for interactive dashboard
     data_path = os.path.abspath(os.path.join(out_dir, "..", "chess_data.json"))
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump({
-            "username": USERNAME,
-            "total_games": total_games,
-            "peak": r_peak,
-            "current": r_curr,
-            "start": r_start,
-            "gain": r_gain,
+            "username": USERNAME, "total_games": total_games,
+            "peak": r_peak, "current": r_curr,
+            "start": r_start, "gain": r_gain,
             "points": all_points
         }, f)
-    print(f"Data saved: {data_path}  ({os.path.getsize(data_path)//1024}KB)")
+    print(f"Data saved: {data_path}")
 
 if __name__ == "__main__":
     main()
