@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 80" width="720" height="80">
+  <rect width="720" height="80" fill="#0d1117"/>
+
+  <!-- Typing reveal animation via clipPath -->
+  <defs>
+    <clipPath id="reveal">
+      <rect x="0" y="0" height="80">
+        <animate attributeName="width" from="0" to="720" dur="2.8s" begin="0.3s" fill="freeze"/>
+      </rect>
+    </clipPath>
+    <!-- Cursor blink -->
+    <style>
+      .cursor { animation: blink 0.75s step-end infinite; }
+      @keyframes blink { 50% { opacity: 0; } }
+    </style>
+  </defs>
+
+  <!-- Greeting line (small, muted) -->
+  <text x="360" y="22" text-anchor="middle"
+        font-family="Fira Code, Consolas, monospace" font-size="13"
+        fill="#6e7681" letter-spacing="1">
+    Hi there, I&apos;m
+  </text>
+
+  <!-- Name with M and A white, rest green ? revealed left to right -->
+  <g clip-path="url(#reveal)">
+    <text x="360" y="58" text-anchor="middle"
+          font-family="Fira Code, Consolas, monospace" font-size="30" font-weight="bold">
+      <tspan fill="#ffffff" letter-spacing="-0.5">M</tspan><tspan fill="#39d353">ohammad </tspan><tspan fill="#ffffff">A</tspan><tspan fill="#39d353">shraf Shaik</tspan>
+    </text>
+  </g>
+
+  <!-- Blinking cursor -->
+  <rect class="cursor" x="663" y="38" width="2" height="28" fill="#39d353" rx="1">
+    <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Wave emoji after text settles -->
+  <text x="695" y="58" font-size="26" opacity="0">
+    &#x1F44B;
+    <animate attributeName="opacity" from="0" to="1" begin="3.2s" dur="0.4s" fill="freeze"/>
+  </text>
+</svg>
