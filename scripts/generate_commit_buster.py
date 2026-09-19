@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 WIDTH = 890
 HEIGHT = 270
 FPS = 25
-TOTAL_FRAMES = 115
+TOTAL_FRAMES = 145
 
 # GitHub Dark Theme Colors
 BG_COLOR    = (13, 17, 23)
@@ -126,30 +126,30 @@ class EpicExplosion:
         self.y = y
         self.level = level
         self.age = 0
-        self.max_age = 20
+        self.max_age = 14
 
         self.shards = []
         box_colors = [HOT_GREEN, (57, 211, 83), (38, 166, 65), (200, 255, 210), FLASH_YELLOW]
-        for _ in range(24):
+        for _ in range(16):
             ang = random.uniform(0, math.pi * 2)
-            spd = random.uniform(3.5, 9.5)
+            spd = random.uniform(3.0, 8.5)
             vx = math.cos(ang) * spd
-            vy = math.sin(ang) * spd - 2.2
+            vy = math.sin(ang) * spd - 2.0
             c = random.choice(box_colors)
-            sz = random.uniform(2.5, 5.2)
-            rot_spd = random.uniform(-0.4, 0.4)
+            sz = random.uniform(2.2, 4.5)
+            rot_spd = random.uniform(-0.35, 0.35)
             self.shards.append(Shard(x, y, vx, vy, c, sz, rot_spd))
 
         self.sparks = []
-        for _ in range(28):
+        for _ in range(18):
             ang = random.uniform(0, math.pi * 2)
-            spd = random.uniform(4.5, 12.5)
+            spd = random.uniform(3.5, 9.5)
             vx = math.cos(ang) * spd
-            vy = math.sin(ang) * spd - 1.2
+            vy = math.sin(ang) * spd - 1.0
             c = random.choice([FLASH_WHITE, FLASH_YELLOW, (255, 180, 50), CYAN_ACCENT])
             self.sparks.append({
                 'x': x, 'y': y, 'vx': vx, 'vy': vy, 'color': c,
-                'life': random.randint(6, 12)
+                'life': random.randint(5, 10)
             })
 
     def update(self):
@@ -216,7 +216,7 @@ class EpicExplosion:
 
 # ==================== BATARANG PROJECTILE ====================
 class Batarang:
-    def __init__(self, x0, y0, x1, y1, duration=4):
+    def __init__(self, x0, y0, x1, y1, duration=3):
         self.x0 = x0
         self.y0 = y0
         self.x1 = x1
@@ -492,7 +492,7 @@ def main():
     total_active_count = sum(sum(1 for lvl in row if lvl > 0) for row in grid_2d)
     print(f"Verified live contribution data: 7 rows x {len(grid_2d[0])} cols, {total_active_count} active commit days.")
 
-    # Find all real green commit coordinates: (week, day, level)
+    # Find ALL real green commit coordinates: (week, day, level)
     active_commit_cells = []
     for d in range(7):
         for w in range(len(grid_2d[d])):
@@ -500,35 +500,10 @@ def main():
             if lvl > 0:
                 active_commit_cells.append((w, d, lvl))
 
-    # Sort chronologically by week (left to right)
+    # Sort chronologically by week (left to right), then day
     active_commit_cells.sort(key=lambda item: (item[0], item[1]))
-
-    # Select 5 real targets from the user's live commits across his active periods:
-    # Target 1: Early in the year (e.g. around week 23, Feb 2026)
-    # Target 2: Mid-year (e.g. around week 46, Aug 2026)
-    # Target 3, 4, 5: Recent commits (weeks 50, 51, 52 - late Aug & Sep 2026)
-    def find_best_commit(target_w):
-        return min(active_commit_cells, key=lambda c: abs(c[0] - target_w))
-
-    real_t1 = find_best_commit(23)
-    real_t2 = find_best_commit(46)
-    real_t3 = find_best_commit(50)
-    real_t4 = find_best_commit(51)
-    real_t5 = find_best_commit(52)
-
-    chosen_targets = []
-    for t in [real_t1, real_t2, real_t3, real_t4, real_t5]:
-        if (t[0], t[1]) not in [(c[0], c[1]) for c in chosen_targets]:
-            chosen_targets.append(t)
-            
-    while len(chosen_targets) < 5:
-        avail = [c for c in active_commit_cells if (c[0], c[1]) not in [(x[0], x[1]) for x in chosen_targets]]
-        if avail:
-            chosen_targets.append(avail[0])
-        else:
-            break
-
-    print(f"Batman will target the user's actual progress: {chosen_targets}")
+    N = len(active_commit_cells)
+    print(f"Batman will target and CLEAR ALL {N} active contributions!")
 
     # Layout dimensions matching clean GitHub cards
     CELL_SIZE = 10
@@ -542,19 +517,21 @@ def main():
         cy = GRID_Y + d * (CELL_SIZE + CELL_GAP) + CELL_SIZE // 2
         return (cx, cy)
 
-    target_coords = {(w, d): get_cell_coord(w, d) for w, d, lvl in chosen_targets}
+    target_coords = {(w, d): get_cell_coord(w, d) for w, d, lvl in active_commit_cells}
 
     MONTH_NAMES = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"]
     day_map = [("Mon", 1), ("Wed", 3), ("Fri", 5)]
 
-    # Clean shot sequence (NO combo text, NO score numbers!)
-    shots = [
-        (20, chosen_targets[0]),
-        (44, chosen_targets[1]),
-        (66, chosen_targets[2]),
-        (74, chosen_targets[3]),
-        (82, chosen_targets[4])
-    ]
+    # Schedule shots for ALL N active contributions
+    START_SHOOT = 12
+    END_SHOOT = 108
+    shot_map = {}
+    hit_map = {}
+    for i in range(N):
+        sf = int(START_SHOOT + i * (END_SHOOT - START_SHOOT) / float(N))
+        hf = sf + 3
+        shot_map.setdefault(sf, []).append(active_commit_cells[i])
+        hit_map.setdefault(hf, []).append(active_commit_cells[i])
 
     # Active grid state
     active_grid = [list(row) for row in grid_2d]
@@ -563,13 +540,14 @@ def main():
     batarangs = []
     frames = []
 
+    bat_x = 50.0
+    run_cycle = 0
+
     print(f"Rendering {TOTAL_FRAMES} frames...")
     for f in range(TOTAL_FRAMES):
-        shake_x, shake_y = 0, 0
-        for shot_f, _ in shots:
-            if f == shot_f + 4:
-                shake_x = random.choice([-2, 2])
-                shake_y = random.choice([-1, 1])
+        is_hit = (f in hit_map)
+        shake_x = random.choice([-1, 1]) if is_hit else 0
+        shake_y = random.choice([-1, 1]) if is_hit else 0
 
         img = Image.new("RGB", (WIDTH, HEIGHT), BG_COLOR)
         draw = ImageDraw.Draw(img)
@@ -578,9 +556,12 @@ def main():
         draw.rounded_rectangle([2, 2, WIDTH - 3, HEIGHT - 3], radius=12, fill=BG_COLOR, outline=CARD_BORDER, width=1)
 
         # 2. CLEAN GITHUB HEADER (No arcade HUD, no scores, no badges!)
-        # Sleek GitHub-style header with Batman symbol & clean title
         draw.text((22, 16), "Mohammed-Ashraf-Shaik / Contributions", fill=WHITE, font=FONT_HEADER)
-        draw.text((22, 33), f"{total_active_count} contributions in the last year  •  The Dark Knight of Code", fill=MUTED, font=FONT_SUB)
+        remaining = max(0, total_active_count - len(destroyed_cells))
+        if remaining > 0:
+            draw.text((22, 33), f"{remaining} of {total_active_count} contributions remaining  •  The Dark Knight of Code", fill=MUTED, font=FONT_SUB)
+        else:
+            draw.text((22, 33), f"All {total_active_count} contributions cleared  •  The Dark Knight of Code", fill=HOT_GREEN, font=FONT_SUB)
 
         draw.line([(15, 48), (WIDTH - 15, 48)], fill=HEADER_LINE, width=1)
 
@@ -601,36 +582,13 @@ def main():
                 cy = GRID_Y + d * (CELL_SIZE + CELL_GAP) + shake_y
 
                 if (w, d) in destroyed_cells:
-                    # Scorched cell
-                    draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=(18, 22, 28), outline=(28, 33, 40))
+                    # Scorched cell: crater outline
+                    draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=(16, 20, 26), outline=(26, 32, 40))
                 else:
                     lvl = active_grid[d][w]
                     col = GREEN_LEVELS[min(lvl, 4)]
                     outl = EMPTY_BORDER if lvl == 0 else col
                     draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=col, outline=outl)
-
-        # Subtle Bat-Targeting Lock on active upcoming target
-        active_shot = None
-        for shot_f, t_info in shots:
-            if f < shot_f and (shot_f - f) <= 8:
-                active_shot = (shot_f, t_info)
-                break
-
-        if active_shot:
-            w_tgt, d_tgt, _ = active_shot[1]
-            tx, ty = target_coords[(w_tgt, d_tgt)]
-            tx += shake_x
-            ty += shake_y
-            sz = 8
-            # Minimalist target reticle
-            draw.line([(tx - sz, ty - sz), (tx - sz + 3, ty - sz)], fill=CYAN_ACCENT, width=1)
-            draw.line([(tx - sz, ty - sz), (tx - sz, ty - sz + 3)], fill=CYAN_ACCENT, width=1)
-            draw.line([(tx + sz, ty - sz), (tx + sz - 3, ty - sz)], fill=CYAN_ACCENT, width=1)
-            draw.line([(tx + sz, ty - sz), (tx + sz, ty - sz + 3)], fill=CYAN_ACCENT, width=1)
-            draw.line([(tx - sz, ty + sz), (tx - sz + 3, ty + sz)], fill=CYAN_ACCENT, width=1)
-            draw.line([(tx - sz, ty + sz), (tx - sz, ty + sz - 3)], fill=CYAN_ACCENT, width=1)
-            draw.line([(tx + sz, ty + sz), (tx + sz - 3, ty + sz)], fill=CYAN_ACCENT, width=1)
-            draw.line([(tx + sz, ty + sz), (tx + sz, ty + sz - 3)], fill=CYAN_ACCENT, width=1)
 
         # 5. Clean Cyber Ground Line
         draw.line([(15, GROUND_Y), (WIDTH - 15, GROUND_Y)], fill=(30, 36, 46), width=1)
@@ -645,75 +603,69 @@ def main():
         draw.text((leg_x + 5 * 14 + 6, leg_y), "More", fill=MUTED, font=FONT_LABEL)
 
         # 6. Batman Movement & Action
-        # Calculate X positions giving 45-degree heroic angles to the targets
-        # Target 1 (week ~23) -> cx ~ 363 -> stand at ~ 290
-        # Target 2 (week ~46) -> cx ~ 662 -> stand at ~ 580
-        # Target 3,4,5 (weeks 50-52) -> cx ~ 714-740 -> stand at ~ 650
-        bat_x = 290
-        run_cycle = 0
-        firing_now = False
-        is_victory = (f >= 92)
+        upcoming_targets = [c for c in active_commit_cells if (c[0], c[1]) not in destroyed_cells]
+        is_victory = (f >= 118)
+        firing_now = (f in shot_map)
+        recoil = 3 if firing_now else 0
 
-        t1_x = target_coords[(chosen_targets[0][0], chosen_targets[0][1])][0]
-        t2_x = target_coords[(chosen_targets[1][0], chosen_targets[1][1])][0]
-        t3_x = target_coords[(chosen_targets[2][0], chosen_targets[2][1])][0]
-
-        stand1 = max(60, t1_x - 70)
-        stand2 = max(stand1 + 60, t2_x - 80)
-        stand3 = max(stand2 + 50, t3_x - 75)
-
-        if f < 14:
-            t = f / 14.0
-            bat_x = 60 + t * (stand1 - 60)
-            run_cycle = f
-        elif f < 28:
-            bat_x = stand1
-        elif f < 40:
-            t = (f - 28) / 12.0
-            bat_x = stand1 + t * (stand2 - stand1)
-            run_cycle = f
-        elif f < 54:
-            bat_x = stand2
-        elif f < 64:
-            t = (f - 54) / 10.0
-            bat_x = stand2 + t * (stand3 - stand2)
-            run_cycle = f
+        if upcoming_targets:
+            cur_target = upcoming_targets[0]
+            tgt_x, tgt_y = target_coords[(cur_target[0], cur_target[1])]
+            
+            # Subtle cyan target lock reticle on the active target
+            if not is_victory and f >= START_SHOOT - 2:
+                sz = 7
+                tx, ty = tgt_x + shake_x, tgt_y + shake_y
+                draw.line([(tx - sz, ty - sz), (tx - sz + 3, ty - sz)], fill=CYAN_ACCENT, width=1)
+                draw.line([(tx - sz, ty - sz), (tx - sz, ty - sz + 3)], fill=CYAN_ACCENT, width=1)
+                draw.line([(tx + sz, ty - sz), (tx + sz - 3, ty - sz)], fill=CYAN_ACCENT, width=1)
+                draw.line([(tx + sz, ty - sz), (tx + sz, ty - sz + 3)], fill=CYAN_ACCENT, width=1)
+                draw.line([(tx - sz, ty + sz), (tx - sz + 3, ty + sz)], fill=CYAN_ACCENT, width=1)
+                draw.line([(tx - sz, ty + sz), (tx - sz, ty + sz - 3)], fill=CYAN_ACCENT, width=1)
+                draw.line([(tx + sz, ty + sz), (tx + sz - 3, ty + sz)], fill=CYAN_ACCENT, width=1)
+                draw.line([(tx + sz, ty + sz), (tx + sz, ty + sz - 3)], fill=CYAN_ACCENT, width=1)
         else:
-            bat_x = stand3
+            cur_target = active_commit_cells[-1]
+            tgt_x, tgt_y = target_coords[(cur_target[0], cur_target[1])]
 
-        if f < 30:
-            cur_target = chosen_targets[0]
-        elif f < 55:
-            cur_target = chosen_targets[1]
-        elif f < 70:
-            cur_target = chosen_targets[2]
-        elif f < 78:
-            cur_target = chosen_targets[3]
+        # Dynamic positioning of Batman
+        prev_bat_x = bat_x
+        if f < START_SHOOT:
+            first_tgt_x = target_coords[(active_commit_cells[0][0], active_commit_cells[0][1])][0]
+            desired_x = max(60, min(first_tgt_x - 65, 710))
+            bat_x = 50.0 + (desired_x - 50.0) * (f / float(START_SHOOT))
+            run_cycle += 1
+        elif f <= END_SHOOT:
+            desired_x = max(60, min(tgt_x - 60, 710))
+            bat_x += (desired_x - bat_x) * 0.18
+            if abs(bat_x - prev_bat_x) > 0.4:
+                run_cycle += 1
+            else:
+                run_cycle = 0
         else:
-            cur_target = chosen_targets[4]
-
-        tgt_x, tgt_y = target_coords[(cur_target[0], cur_target[1])]
+            # End sequence: walk to victory mark
+            desired_x = min(710, target_coords[(active_commit_cells[-1][0], active_commit_cells[-1][1])][0] - 45)
+            bat_x += (desired_x - bat_x) * 0.12
+            run_cycle = 0
 
         dx = tgt_x - (bat_x + 4)
         dy = tgt_y - (GROUND_Y - 30)
         aim_angle = math.atan2(dy, dx)
 
-        recoil = 0
-        for shot_f, t_info in shots:
-            w_s, d_s, lvl_s = t_info
-            if f == shot_f:
-                firing_now = True
-                recoil = 4
-                bx_est = bat_x + 4 + math.cos(aim_angle) * 30
-                by_est = (GROUND_Y - 30) + math.sin(aim_angle) * 30
+        # Fire Batarangs
+        if f in shot_map:
+            for w_s, d_s, lvl_s in shot_map[f]:
+                bx_est = bat_x + 4 + math.cos(aim_angle) * 28
+                by_est = (GROUND_Y - 30) + math.sin(aim_angle) * 28
                 dest_x, dest_y = target_coords[(w_s, d_s)]
-                batarangs.append(Batarang(bx_est, by_est, dest_x, dest_y, duration=4))
+                batarangs.append(Batarang(bx_est, by_est, dest_x, dest_y, duration=3))
 
-            if f == shot_f + 4:
-                dest_x, dest_y = target_coords[(w_s, d_s)]
-                lvl = active_grid[d_s][w_s]
-                explosions.append(EpicExplosion(dest_x, dest_y, lvl if lvl > 0 else 4))
-                destroyed_cells.add((w_s, d_s))
+        # Handle Hits & Explosions
+        if f in hit_map:
+            for w_h, d_h, lvl_h in hit_map[f]:
+                dest_x, dest_y = target_coords[(w_h, d_h)]
+                explosions.append(EpicExplosion(dest_x, dest_y, lvl_h if lvl_h > 0 else 4))
+                destroyed_cells.add((w_h, d_h))
 
         # Draw Batman
         draw_batman(
@@ -734,7 +686,7 @@ def main():
                 b.draw(draw)
         batarangs = [b for b in batarangs if b.alive]
 
-        # 8. Explosions (Big, dramatic debris & blast clouds)
+        # 8. Explosions
         for exp in explosions:
             exp.update()
             exp.draw(draw)
@@ -749,7 +701,7 @@ def main():
 
     opt_frames = []
     for fr in frames:
-        q = fr.quantize(palette=palette_img, dither=Image.Dither.FLOYDSTEINBERG)
+        q = fr.quantize(palette=palette_img, dither=Image.Dither.NONE)
         opt_frames.append(q)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
