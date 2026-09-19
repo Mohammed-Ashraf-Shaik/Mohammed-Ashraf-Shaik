@@ -8,8 +8,9 @@ from PIL import Image, ImageDraw, ImageFont
 # ==================== CONFIGURATION ====================
 WIDTH = 890
 HEIGHT = 270
-FPS = 25
-TOTAL_FRAMES = 145
+FPS = 18
+FRAME_DURATION = 55
+TOTAL_FRAMES = 175
 
 # GitHub Dark Theme Colors
 BG_COLOR    = (13, 17, 23)
@@ -84,135 +85,80 @@ def fetch_real_contributions(username="Mohammed-Ashraf-Shaik"):
     random.seed(1337)
     return [[random.choice([1, 2, 3, 4]) if random.random() > 0.85 else 0 for _ in range(53)] for _ in range(7)]
 
-# ==================== EXPLOSION SYSTEM ====================
-class Shard:
-    def __init__(self, x, y, vx, vy, color, size, rot_speed):
-        self.x = x
-        self.y = y
-        self.vx = vx
-        self.vy = vy
-        self.color = color
-        self.size = size
-        self.angle = random.uniform(0, math.pi * 2)
-        self.rot_speed = rot_speed
-        self.life = random.randint(14, 20)
-
-    def update(self):
-        self.x += self.vx
-        self.y += self.vy
-        self.vy += 0.28
-        self.vx *= 0.94
-        self.angle += self.rot_speed
-        self.life -= 1
-
-    def draw(self, draw):
-        if self.life <= 0:
-            return
-        cos_a = math.cos(self.angle)
-        sin_a = math.sin(self.angle)
-        hw = self.size / 2.0
-        hh = (self.size * 1.3) / 2.0
-        pts = [
-            (self.x + cos_a * (-hw) - sin_a * (-hh), self.y + sin_a * (-hw) + cos_a * (-hh)),
-            (self.x + cos_a * (hw)  - sin_a * (-hh), self.y + sin_a * (hw)  + cos_a * (-hh)),
-            (self.x + cos_a * (hw)  - sin_a * (hh),  self.y + sin_a * (hw)  + cos_a * (hh)),
-            (self.x + cos_a * (-hw) - sin_a * (hh),  self.y + sin_a * (-hw) + cos_a * (hh))
-        ]
-        draw.polygon(pts, fill=self.color)
-
-class EpicExplosion:
-    def __init__(self, x, y, level=4):
-        self.x = x
-        self.y = y
+# ==================== CRISP BOX SHATTER SYSTEM ====================
+class BoxShatter:
+    def __init__(self, cx, cy, level=2):
+        self.cx = cx
+        self.cy = cy
         self.level = level
         self.age = 0
-        self.max_age = 14
+        self.max_age = 7  # Quick, localized to the 10x10 box
 
+        box_color = GREEN_LEVELS[min(max(1, level), 4)]
+        bright_color = HOT_GREEN
+
+        # 6 small green pixel fragments of the 10x10 box
         self.shards = []
-        box_colors = [HOT_GREEN, (57, 211, 83), (38, 166, 65), (200, 255, 210), FLASH_YELLOW]
-        for _ in range(16):
-            ang = random.uniform(0, math.pi * 2)
-            spd = random.uniform(3.0, 8.5)
-            vx = math.cos(ang) * spd
-            vy = math.sin(ang) * spd - 2.0
-            c = random.choice(box_colors)
-            sz = random.uniform(2.2, 4.5)
-            rot_spd = random.uniform(-0.35, 0.35)
-            self.shards.append(Shard(x, y, vx, vy, c, sz, rot_spd))
+        angles = [0.4, 1.2, 2.1, 3.3, 4.3, 5.3]
+        for a in angles:
+            spd = random.uniform(1.2, 2.5)
+            vx = math.cos(a) * spd
+            vy = math.sin(a) * spd - 1.0
+            sz = random.uniform(2.0, 3.0)
+            col = box_color if random.random() > 0.3 else bright_color
+            self.shards.append({
+                'x': cx + math.cos(a) * 1.5,
+                'y': cy + math.sin(a) * 1.5,
+                'vx': vx,
+                'vy': vy,
+                'size': sz,
+                'color': col
+            })
 
+        # 4 tiny pinpoint spark dots (NO giant fireball, NO smoke cloud)
         self.sparks = []
-        for _ in range(18):
+        for _ in range(4):
             ang = random.uniform(0, math.pi * 2)
-            spd = random.uniform(3.5, 9.5)
-            vx = math.cos(ang) * spd
-            vy = math.sin(ang) * spd - 1.0
-            c = random.choice([FLASH_WHITE, FLASH_YELLOW, (255, 180, 50), CYAN_ACCENT])
+            spd = random.uniform(1.8, 3.5)
             self.sparks.append({
-                'x': x, 'y': y, 'vx': vx, 'vy': vy, 'color': c,
-                'life': random.randint(5, 10)
+                'x': cx,
+                'y': cy,
+                'vx': math.cos(ang) * spd,
+                'vy': math.sin(ang) * spd,
+                'life': random.randint(2, 4)
             })
 
     def update(self):
         self.age += 1
         for s in self.shards:
-            s.update()
+            s['x'] += s['vx']
+            s['y'] += s['vy']
+            s['vy'] += 0.32  # gentle gravity pulling shards down
+            s['vx'] *= 0.90
         for sp in self.sparks:
             sp['x'] += sp['vx']
             sp['y'] += sp['vy']
-            sp['vx'] *= 0.92
-            sp['vy'] *= 0.92
             sp['life'] -= 1
 
     def draw(self, draw):
-        if self.age < 15:
-            sw_r = self.age * 3.6
-            factor = max(0.0, 1.0 - (self.age / 15.0))
-            sw_col = (int(HOT_GREEN[0] * factor), int(HOT_GREEN[1] * factor), int(HOT_GREEN[2] * factor))
-            if sw_r > 2:
-                draw.ellipse([self.x - sw_r, self.y - sw_r, self.x + sw_r, self.y + sw_r], outline=sw_col, width=2)
+        # 1. Direct impact flash on the 10x10 box itself
+        if self.age <= 1:
+            draw.rectangle([self.cx - 5, self.cy - 5, self.cx + 5, self.cy + 5], fill=FLASH_WHITE)
+            draw.line([(self.cx - 6, self.cy), (self.cx + 6, self.cy)], fill=CYAN_ACCENT, width=1)
+            draw.line([(self.cx, self.cy - 6), (self.cx, self.cy + 6)], fill=CYAN_ACCENT, width=1)
+        elif self.age <= 3:
+            r = 3 + self.age
+            draw.ellipse([self.cx - r, self.cy - r, self.cx + r, self.cy + r], outline=CYAN_ACCENT, width=1)
 
-        if 2 <= self.age < 11:
-            sw2_r = (self.age - 2) * 2.8
-            factor2 = max(0.0, 1.0 - ((self.age - 2) / 9.0))
-            sw2_col = (int(FLASH_YELLOW[0] * factor2), int(FLASH_YELLOW[1] * factor2), int(FLASH_YELLOW[2] * factor2))
-            if sw2_r > 2:
-                draw.ellipse([self.x - sw2_r, self.y - sw2_r, self.x + sw2_r, self.y + sw2_r], outline=sw2_col, width=1)
-
-        if self.age <= 3:
-            r = max(5, int(self.age * 5.2))
-            draw.ellipse([self.x - r - 2, self.y - r - 2, self.x + r + 2, self.y + r + 2], fill=HOT_GREEN)
-            draw.ellipse([self.x - r, self.y - r, self.x + r, self.y + r], fill=FLASH_WHITE)
-            star_len = r * 2.6
-            draw.line([(self.x - star_len, self.y), (self.x + star_len, self.y)], fill=FLASH_WHITE, width=2)
-            draw.line([(self.x, self.y - star_len), (self.x, self.y + star_len)], fill=FLASH_WHITE, width=2)
-        elif self.age <= 8:
-            fb_r = int(16 - (self.age - 3) * 1.6)
-            lobes = [
-                (self.x, self.y, fb_r + 2),
-                (self.x - fb_r*0.6, self.y - fb_r*0.4, fb_r * 0.8),
-                (self.x + fb_r*0.6, self.y - fb_r*0.4, fb_r * 0.8),
-                (self.x - fb_r*0.5, self.y + fb_r*0.5, fb_r * 0.7),
-                (self.x + fb_r*0.5, self.y + fb_r*0.5, fb_r * 0.7)
-            ]
-            for lx, ly, lr in lobes:
-                draw.ellipse([lx - lr, ly - lr, lx + lr, ly + lr], fill=FLASH_ORANGE)
-            for lx, ly, lr in lobes:
-                draw.ellipse([lx - lr*0.6, ly - lr*0.6, lx + lr*0.6, ly + lr*0.6], fill=FLASH_YELLOW)
-        elif self.age <= 14:
-            sm_y = self.y - (self.age - 8) * 1.5
-            sm_r = int(11 + (self.age - 8) * 1.2)
-            alpha_sm = max(0.0, 1.0 - (self.age - 8) / 6.0)
-            c = (int(50 * alpha_sm), int(60 * alpha_sm), int(75 * alpha_sm))
-            draw.ellipse([self.x - sm_r, sm_y - sm_r, self.x + sm_r, sm_y + sm_r], fill=c)
-
+        # 2. Green debris shards falling away
         for s in self.shards:
-            s.draw(draw)
+            hw = s['size'] / 2.0
+            draw.rectangle([s['x'] - hw, s['y'] - hw, s['x'] + hw, s['y'] + hw], fill=s['color'])
 
+        # 3. Pinpoint spark dots
         for sp in self.sparks:
             if sp['life'] > 0:
-                sx, sy = sp['x'], sp['y']
-                draw.line([(sx, sy), (sx - sp['vx']*0.8, sy - sp['vy']*0.8)], fill=sp['color'], width=1)
-                draw.point((sx, sy), fill=FLASH_WHITE)
+                draw.point((int(sp['x']), int(sp['y'])), fill=FLASH_WHITE)
 
 # ==================== BATARANG PROJECTILE ====================
 class Batarang:
@@ -522,14 +468,14 @@ def main():
     MONTH_NAMES = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"]
     day_map = [("Mon", 1), ("Wed", 3), ("Fri", 5)]
 
-    # Schedule shots for ALL N active contributions
-    START_SHOOT = 12
-    END_SHOOT = 108
+    # Schedule shots for ALL N active contributions with comfortable pacing
+    START_SHOOT = 16
+    END_SHOOT = 145
     shot_map = {}
     hit_map = {}
     for i in range(N):
         sf = int(START_SHOOT + i * (END_SHOOT - START_SHOOT) / float(N))
-        hf = sf + 3
+        hf = sf + 4
         shot_map.setdefault(sf, []).append(active_commit_cells[i])
         hit_map.setdefault(hf, []).append(active_commit_cells[i])
 
@@ -545,9 +491,9 @@ def main():
 
     print(f"Rendering {TOTAL_FRAMES} frames...")
     for f in range(TOTAL_FRAMES):
-        is_hit = (f in hit_map)
-        shake_x = random.choice([-1, 1]) if is_hit else 0
-        shake_y = random.choice([-1, 1]) if is_hit else 0
+        # Zero screen shake: rock solid clarity so the user clearly sees each box hit
+        shake_x = 0
+        shake_y = 0
 
         img = Image.new("RGB", (WIDTH, HEIGHT), BG_COLOR)
         draw = ImageDraw.Draw(img)
@@ -567,22 +513,22 @@ def main():
 
         # 3. Month Labels
         for mi, mname in enumerate(MONTH_NAMES):
-            col_x = GRID_X + mi * int(53 / 12 * (CELL_SIZE + CELL_GAP)) + shake_x
-            draw.text((col_x, GRID_Y - 13 + shake_y), mname, fill=MUTED, font=FONT_LABEL)
+            col_x = GRID_X + mi * int(53 / 12 * (CELL_SIZE + CELL_GAP))
+            draw.text((col_x, GRID_Y - 13), mname, fill=MUTED, font=FONT_LABEL)
 
         # Day Labels (Mon, Wed, Fri)
         for dname, drow in day_map:
-            dy = GRID_Y + drow * (CELL_SIZE + CELL_GAP) + 1 + shake_y
-            draw.text((GRID_X - 28 + shake_x, dy), dname, fill=MUTED, font=FONT_LABEL)
+            dy = GRID_Y + drow * (CELL_SIZE + CELL_GAP) + 1
+            draw.text((GRID_X - 28, dy), dname, fill=MUTED, font=FONT_LABEL)
 
         # 4. EXACT REAL CONTRIBUTION GRID (2D mapped: Row d, Col w)
         for d in range(7):
             for w in range(len(active_grid[d])):
-                cx = GRID_X + w * (CELL_SIZE + CELL_GAP) + shake_x
-                cy = GRID_Y + d * (CELL_SIZE + CELL_GAP) + shake_y
+                cx = GRID_X + w * (CELL_SIZE + CELL_GAP)
+                cy = GRID_Y + d * (CELL_SIZE + CELL_GAP)
 
                 if (w, d) in destroyed_cells:
-                    # Scorched cell: crater outline
+                    # Scorched/empty cell slot
                     draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=(16, 20, 26), outline=(26, 32, 40))
                 else:
                     lvl = active_grid[d][w]
@@ -604,7 +550,7 @@ def main():
 
         # 6. Batman Movement & Action
         upcoming_targets = [c for c in active_commit_cells if (c[0], c[1]) not in destroyed_cells]
-        is_victory = (f >= 118)
+        is_victory = (f >= 152)
         firing_now = (f in shot_map)
         recoil = 3 if firing_now else 0
 
@@ -612,10 +558,10 @@ def main():
             cur_target = upcoming_targets[0]
             tgt_x, tgt_y = target_coords[(cur_target[0], cur_target[1])]
             
-            # Subtle cyan target lock reticle on the active target
+            # Subtle cyan target lock reticle on the active upcoming target
             if not is_victory and f >= START_SHOOT - 2:
                 sz = 7
-                tx, ty = tgt_x + shake_x, tgt_y + shake_y
+                tx, ty = tgt_x, tgt_y
                 draw.line([(tx - sz, ty - sz), (tx - sz + 3, ty - sz)], fill=CYAN_ACCENT, width=1)
                 draw.line([(tx - sz, ty - sz), (tx - sz, ty - sz + 3)], fill=CYAN_ACCENT, width=1)
                 draw.line([(tx + sz, ty - sz), (tx + sz - 3, ty - sz)], fill=CYAN_ACCENT, width=1)
@@ -637,7 +583,7 @@ def main():
             run_cycle += 1
         elif f <= END_SHOOT:
             desired_x = max(60, min(tgt_x - 60, 710))
-            bat_x += (desired_x - bat_x) * 0.18
+            bat_x += (desired_x - bat_x) * 0.16
             if abs(bat_x - prev_bat_x) > 0.4:
                 run_cycle += 1
             else:
@@ -645,26 +591,26 @@ def main():
         else:
             # End sequence: walk to victory mark
             desired_x = min(710, target_coords[(active_commit_cells[-1][0], active_commit_cells[-1][1])][0] - 45)
-            bat_x += (desired_x - bat_x) * 0.12
+            bat_x += (desired_x - bat_x) * 0.10
             run_cycle = 0
 
         dx = tgt_x - (bat_x + 4)
         dy = tgt_y - (GROUND_Y - 30)
         aim_angle = math.atan2(dy, dx)
 
-        # Fire Batarangs
+        # Fire Batarangs (4-frame flight duration for clear trajectory tracking)
         if f in shot_map:
             for w_s, d_s, lvl_s in shot_map[f]:
                 bx_est = bat_x + 4 + math.cos(aim_angle) * 28
                 by_est = (GROUND_Y - 30) + math.sin(aim_angle) * 28
                 dest_x, dest_y = target_coords[(w_s, d_s)]
-                batarangs.append(Batarang(bx_est, by_est, dest_x, dest_y, duration=3))
+                batarangs.append(Batarang(bx_est, by_est, dest_x, dest_y, duration=4))
 
-        # Handle Hits & Explosions
+        # Handle Hits: Shatter box cleanly with 100% localized debris chips
         if f in hit_map:
             for w_h, d_h, lvl_h in hit_map[f]:
                 dest_x, dest_y = target_coords[(w_h, d_h)]
-                explosions.append(EpicExplosion(dest_x, dest_y, lvl_h if lvl_h > 0 else 4))
+                explosions.append(BoxShatter(dest_x, dest_y, lvl_h if lvl_h > 0 else 2))
                 destroyed_cells.add((w_h, d_h))
 
         # Draw Batman
@@ -686,7 +632,7 @@ def main():
                 b.draw(draw)
         batarangs = [b for b in batarangs if b.alive]
 
-        # 8. Explosions
+        # 8. Box Shatter Particles
         for exp in explosions:
             exp.update()
             exp.draw(draw)
@@ -717,10 +663,11 @@ def main():
             p,
             save_all=True,
             append_images=opt_frames[1:],
-            duration=40,
+            duration=FRAME_DURATION,
             loop=0,
             optimize=True
         )
+        print(f"Saved {p}: {os.path.getsize(p) // 1024} KB")
         print(f"Saved {p}: {os.path.getsize(p) // 1024} KB")
 
 if __name__ == "__main__":
