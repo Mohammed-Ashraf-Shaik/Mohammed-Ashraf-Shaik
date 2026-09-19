@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="name_banner.svg?v=4" alt="Typing SVG" width="700" />
+  <img src="name_banner.svg?v=5" alt="Typing SVG" width="700" />
   <br/>&#x1F44B;
 </h1>
 
