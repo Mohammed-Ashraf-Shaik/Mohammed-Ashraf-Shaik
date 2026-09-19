@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="name_banner.svg?v=2" alt="Hi there, I'm Mohammad Ashraf Shaik" width="720" />
+  <img src="name_banner.svg?v=3" alt="Hi there, I'm Mohammad Ashraf Shaik" width="720" />
 </p>
 
 <p align="center">

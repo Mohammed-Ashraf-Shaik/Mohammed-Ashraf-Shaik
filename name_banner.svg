@@ -1,43 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 80" width="720" height="80">
-  <rect width="720" height="80" fill="#0d1117"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 50" width="700" height="50">
+  <rect width="700" height="50" fill="#0d1117"/>
 
-  <!-- Typing reveal animation via clipPath -->
-  <defs>
-    <clipPath id="reveal">
-      <rect x="0" y="0" height="80">
-        <animate attributeName="width" from="0" to="720" dur="2.8s" begin="0.3s" fill="freeze"/>
-      </rect>
-    </clipPath>
-    <!-- Cursor blink -->
-    <style>
-      .cursor { animation: blink 0.75s step-end infinite; }
-      @keyframes blink { 50% { opacity: 0; } }
-    </style>
-  </defs>
-
-  <!-- Greeting line (small, muted) -->
-  <text x="360" y="22" text-anchor="middle"
-        font-family="Fira Code, Consolas, monospace" font-size="13"
-        fill="#6e7681" letter-spacing="1">
-    Hi there, I&apos;m
+  <!-- Typing text: all chars start invisible, appear one by one -->
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+        font-family="Fira Code,Consolas,monospace" font-size="27" font-weight="normal"
+        letter-spacing="0">
+    <tspan fill="#39d353" opacity="0">H<animate attributeName="opacity" values="0;1" begin="0.20s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">i<animate attributeName="opacity" values="0;1" begin="0.27s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0"> <animate attributeName="opacity" values="0;1" begin="0.34s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">t<animate attributeName="opacity" values="0;1" begin="0.41s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">h<animate attributeName="opacity" values="0;1" begin="0.48s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">e<animate attributeName="opacity" values="0;1" begin="0.55s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">r<animate attributeName="opacity" values="0;1" begin="0.62s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">e<animate attributeName="opacity" values="0;1" begin="0.69s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">,<animate attributeName="opacity" values="0;1" begin="0.76s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0"> <animate attributeName="opacity" values="0;1" begin="0.83s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">I<animate attributeName="opacity" values="0;1" begin="0.90s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">&apos;<animate attributeName="opacity" values="0;1" begin="0.97s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">m<animate attributeName="opacity" values="0;1" begin="1.04s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0"> <animate attributeName="opacity" values="0;1" begin="1.11s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#ffffff" opacity="0">M<animate attributeName="opacity" values="0;1" begin="1.18s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">o<animate attributeName="opacity" values="0;1" begin="1.25s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">h<animate attributeName="opacity" values="0;1" begin="1.32s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">a<animate attributeName="opacity" values="0;1" begin="1.39s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">m<animate attributeName="opacity" values="0;1" begin="1.46s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">m<animate attributeName="opacity" values="0;1" begin="1.53s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">a<animate attributeName="opacity" values="0;1" begin="1.60s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">d<animate attributeName="opacity" values="0;1" begin="1.67s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0"> <animate attributeName="opacity" values="0;1" begin="1.74s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#ffffff" opacity="0">A<animate attributeName="opacity" values="0;1" begin="1.81s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">s<animate attributeName="opacity" values="0;1" begin="1.88s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">h<animate attributeName="opacity" values="0;1" begin="1.95s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">r<animate attributeName="opacity" values="0;1" begin="2.02s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">a<animate attributeName="opacity" values="0;1" begin="2.09s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">f<animate attributeName="opacity" values="0;1" begin="2.16s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0"> <animate attributeName="opacity" values="0;1" begin="2.23s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">S<animate attributeName="opacity" values="0;1" begin="2.30s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">h<animate attributeName="opacity" values="0;1" begin="2.37s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">a<animate attributeName="opacity" values="0;1" begin="2.44s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">i<animate attributeName="opacity" values="0;1" begin="2.51s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">k<animate attributeName="opacity" values="0;1" begin="2.58s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0"> <animate attributeName="opacity" values="0;1" begin="2.65s" dur="0.01s" fill="freeze"/></tspan>
+    <tspan fill="#39d353" opacity="0">👋<animate attributeName="opacity" values="0;1" begin="2.72s" dur="0.01s" fill="freeze"/></tspan>
   </text>
 
-  <!-- Name with M and A white, rest green ? revealed left to right -->
-  <g clip-path="url(#reveal)">
-    <text x="360" y="58" text-anchor="middle"
-          font-family="Fira Code, Consolas, monospace" font-size="30" font-weight="bold">
-      <tspan fill="#ffffff" letter-spacing="-0.5">M</tspan><tspan fill="#39d353">ohammad </tspan><tspan fill="#ffffff">A</tspan><tspan fill="#39d353">shraf Shaik</tspan>
-    </text>
-  </g>
-
-  <!-- Blinking cursor -->
-  <rect class="cursor" x="663" y="38" width="2" height="28" fill="#39d353" rx="1">
-    <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+  <!-- Blinking cursor ? moves right as chars appear, fades out when done -->
+  <rect x="50%" y="12" width="2" height="28" fill="#39d353" rx="1" opacity="1">
+    <animate attributeName="opacity" values="1;0;1" dur="0.75s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1" begin="3.3s" dur="9999s" fill="freeze"/>
   </rect>
-
-  <!-- Wave emoji after text settles -->
-  <text x="695" y="58" font-size="26" opacity="0">
-    &#x1F44B;
-    <animate attributeName="opacity" from="0" to="1" begin="3.2s" dur="0.4s" fill="freeze"/>
-  </text>
 </svg>
