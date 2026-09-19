@@ -32,51 +32,54 @@ def generate_name_gif(output_path='name_animation.gif'):
     start_x = (WIDTH - total_w) / 2
     y = (HEIGHT - 28) / 2 - 2
 
-    BG_COLOR = (13, 17, 23)   # #0d1117 (GitHub Dark)
-    GREEN = (57, 211, 83)      # #39d353
-    WHITE = (255, 255, 255)    # pure white for M and A
+    BG_COLOR = (13, 17, 23)
+    GREEN = (57, 211, 83)
+    WHITE = (255, 255, 255)
 
-    # Pre-render a frame for each character count from 0 to len(text)
-    rendered_cache = {}
-    for count in range(len(text) + 1):
+    def make_frame(count):
         img = Image.new('RGB', (WIDTH, HEIGHT), BG_COLOR)
         draw = ImageDraw.Draw(img)
         for i in range(count):
             ch = text[i]
             col = WHITE if i in (m_idx, a_idx) else GREEN
             draw.text((start_x + i * char_w, y), ch, fill=col, font=font)
-        rendered_cache[count] = img
+        return img
 
     frames = []
     durations = []
 
-    # 1. Initial pause on empty (350ms)
-    frames.append(rendered_cache[0])
+    # 1. Initial blank pause (350ms)
+    frames.append(make_frame(0))
     durations.append(350)
 
     # 2. Type forward letter-by-letter (70ms per char)
-    for count in range(1, len(text)):
-        frames.append(rendered_cache[count])
+    for count in range(1, len(text) + 1):
+        frames.append(make_frame(count))
         durations.append(70)
 
-    # 3. Full text displayed: hold for 1800ms so the user can comfortably read it
-    frames.append(rendered_cache[len(text)])
+    # 3. Hold complete text (1800ms)
+    frames.append(make_frame(len(text)))
     durations.append(1800)
 
-    # 4. Reverse backspace: delete letter-by-letter back to empty (40ms per char)
+    # 4. Reverse backspace letter-by-letter (40ms per char)
     for count in range(len(text) - 1, -1, -1):
-        frames.append(rendered_cache[count])
+        frames.append(make_frame(count))
         durations.append(40)
 
+    # disposal=2 ensures each frame fully replaces the previous one
+    # so reverse frames actually remove characters visually
     frames[0].save(
         output_path,
         save_all=True,
         append_images=frames[1:],
         duration=durations,
         loop=0,
-        optimize=True
+        disposal=2
     )
     print(f"Generated {output_path}: {len(frames)} frames, {os.path.getsize(output_path)//1024} KB")
 
 if __name__ == '__main__':
-    generate_name_gif('name_animation.gif')
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(script_dir)
+    out = os.path.join(repo_root, 'name_animation.gif')
+    generate_name_gif(out)
