@@ -16,8 +16,8 @@
     <img src="https://img.shields.io/badge/Chess.com-ashumm-81b64c?style=for-the-badge&logo=chess.com&logoColor=white" alt="Chess.com" />
   </a>
   &nbsp;
-  <a href="https://github.com/Mohammed-Ashraf-Shaik/MYPORTFOLIO">
-    <img src="https://img.shields.io/badge/Portfolio-Interactive_3D-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="Portfolio" />
+  <a href="https://myportfolio-ashrafm.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/Portfolio-Live_3D_Demo-00f5ff?style=for-the-badge&logo=vercel&logoColor=white" alt="Portfolio" />
   </a>
   &nbsp;
   <a href="mailto:ashubasha52@gmail.com">
@@ -75,11 +75,11 @@
 
 | Project | Tech Stack | Description | Links |
 | :--- | :--- | :--- | :--- |
-| **&#x1F3E5; SmartCare** | Vite, ES Modules, Modular CSS | Next-gen hospital operating system: patient queue tokens, doctor workspace, and ambulance dispatch. | [Code](https://github.com/Mohammed-Ashraf-Shaik/smart-care-app) |
+| **&#x1F3E5; SmartCare** | Vite, ES Modules, Modular CSS | Next-gen hospital operating system: patient queue tokens, doctor workspace, and ambulance dispatch. | [Live Demo](https://smartcare-gprec.vercel.app) \| [Code](https://github.com/Mohammed-Ashraf-Shaik/smart-care-app) |
 | **&#x1F4B3; Razorpay UI Clone** | HTML5, CSS3, JavaScript | Full-fidelity fintech landing page with multi-tier mega menus, 3D hero visual, and banking suites. | [Code](https://github.com/Mohammed-Ashraf-Shaik/razor) |
 | **&#x1F6D2; Flipkart Web Clone** | HTML5, CSS3, FontAwesome | Feature-rich e-commerce clone featuring product category carousel, deals grid, and responsive layout. | [Code](https://github.com/Mohammed-Ashraf-Shaik/my_1_project) |
 | **&#x1F9ED; Pro Speed Tracker** | HTML5 Canvas, Geolocation API | High-precision real-time GPS speedometer & HUD with analog dial gauge and 10-language support. | [Code](https://github.com/Mohammed-Ashraf-Shaik/web2) |
-| **&#x1F310; Interactive 3D Portfolio** | JavaScript, 3D Canvas, CSS | Interactive 3D Cyber-Quantum Portfolio & Spatial Inventory. | [Code](https://github.com/Mohammed-Ashraf-Shaik/MYPORTFOLIO) |
+| **&#x1F310; Interactive 3D Portfolio** | JavaScript, Three.js, CSS | Interactive 3D Cyber-Quantum Portfolio & Spatial Inventory. | [Live Demo](https://myportfolio-ashrafm.vercel.app/) \| [Code](https://github.com/Mohammed-Ashraf-Shaik/MYPORTFOLIO) |
 | **&#x1F9E9; LeetCode Practice** | C++, DSA, LeetHub | Continually updated repository of algorithmic problem solutions and data structures. | [Code](https://github.com/Mohammed-Ashraf-Shaik/myleetcode) |
 
 ---
