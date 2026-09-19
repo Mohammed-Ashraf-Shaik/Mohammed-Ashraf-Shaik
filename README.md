@@ -27,51 +27,51 @@
 
 ---
 
-## <img src="https://api.iconify.design/lucide:code-2.svg?color=%2339D353" width="22" height="22"/> Live LeetCode Progress & Heatmap
+## &#x1F4BB; Live LeetCode Progress & Heatmap
 
 <p align="center">
-  <a href="https://leetcode.com/u/Shaik_mohameed_Ashraf/" target="_blank">
+  <a href="https://leetcode.com/u/Shaik_mohameed_Ashraf/">
     <img src="https://leetcard.jacoblin.cool/Shaik_mohameed_Ashraf?theme=dark&font=Karma&ext=heatmap" alt="Mohammad Ashraf Shaik LeetCode Stats Card" />
   </a>
 </p>
 
 ---
 
-<h3 align="center"><img src="https://api.iconify.design/lucide:crown.svg?color=%2339D353" width="20" height="20"/> Live Chess.com Progress &amp; Tracking</h3>
+<h3 align="center">&#x265F;&#xFE0F; Live Chess.com Progress &amp; Tracking</h3>
 
 <p align="center">
-  <a href="https://www.chess.com/member/ashumm" target="_blank">
+  <a href="https://www.chess.com/member/ashumm">
     <img src="https://img.shields.io/badge/dynamic/json?style=for-the-badge&label=Rapid%20Rating&query=chess_rapid.last.rating&url=https%3A%2F%2Fapi.chess.com%2Fpub%2Fplayer%2Fashumm%2Fstats&logo=chess.com&logoColor=white&color=81b64c" alt="Chess.com Rapid" />
   </a>
   &nbsp;
-  <a href="https://www.chess.com/member/ashumm" target="_blank">
+  <a href="https://www.chess.com/member/ashumm">
     <img src="https://img.shields.io/badge/dynamic/json?style=for-the-badge&label=Blitz%20Rating&query=chess_blitz.last.rating&url=https%3A%2F%2Fapi.chess.com%2Fpub%2Fplayer%2Fashumm%2Fstats&logo=chess.com&logoColor=white&color=f7c04a" alt="Chess.com Blitz" />
   </a>
   &nbsp;
-  <a href="https://www.chess.com/member/ashumm" target="_blank">
+  <a href="https://www.chess.com/member/ashumm">
     <img src="https://img.shields.io/badge/dynamic/json?style=for-the-badge&label=Bullet%20Rating&query=chess_bullet.last.rating&url=https%3A%2F%2Fapi.chess.com%2Fpub%2Fplayer%2Fashumm%2Fstats&logo=chess.com&logoColor=white&color=e06c75" alt="Chess.com Bullet" />
   </a>
   &nbsp;
-  <a href="https://www.chess.com/member/ashumm" target="_blank">
+  <a href="https://www.chess.com/member/ashumm">
     <img src="https://img.shields.io/badge/League-Legend-9b59b6?style=for-the-badge&logo=chess.com&logoColor=white" alt="Chess League" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://mohammed-ashraf-shaik.github.io/Mohammed-Ashraf-Shaik/" target="_blank">
+  <a href="https://mohammed-ashraf-shaik.github.io/Mohammed-Ashraf-Shaik/">
     <img src="https://img.shields.io/badge/&#x1F3AE;_Live_Interactive_Dashboard-Scroll_Waves_%26_Mouse_Hover_Tooltips-81b64c?style=for-the-badge&logo=chess.com&logoColor=white" alt="Interactive Dashboard" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://mohammed-ashraf-shaik.github.io/Mohammed-Ashraf-Shaik/" target="_blank">
+  <a href="https://mohammed-ashraf-shaik.github.io/Mohammed-Ashraf-Shaik/">
     <img src="chess_rating_graph.svg?v=5" alt="Chess.com All-Time Rating Progression Graph" width="100%" />
   </a>
 </p>
 
 ---
 
-## <img src="https://api.iconify.design/lucide:rocket.svg?color=%2339D353" width="22" height="22"/> Featured Projects
+## &#x1F680; Featured Projects
 
 | Project | Tech Stack | Description | Links |
 | :--- | :--- | :--- | :--- |
@@ -84,7 +84,7 @@
 
 ---
 
-## <img src="https://api.iconify.design/lucide:wrench.svg?color=%2339D353" width="22" height="22"/> Languages &amp; Technologies
+## &#x1F6E0;&#xFE0F; Languages &amp; Technologies
 
 <p align="center">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
@@ -100,7 +100,7 @@
 
 ---
 
-<h3 align="center"><img src="https://api.iconify.design/lucide:bot.svg?color=%2339D353" width="20" height="20"/> I vibe with</h3>
+<h3 align="center">&#x1F916; I vibe with</h3>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Antigravity-0D1117?style=for-the-badge&logo=google&logoColor=white" alt="Antigravity" />
@@ -112,7 +112,7 @@
 
 ---
 
-## <img src="https://api.iconify.design/lucide:bar-chart-2.svg?color=%2339D353" width="22" height="22"/> GitHub Activity &amp; Stats
+## &#x1F4C8; GitHub Activity &amp; Stats
 
 <p align="center">
   <img src="https://github-readme-stats-fast.vercel.app/api?username=Mohammed-Ashraf-Shaik&show_icons=true&theme=tokyonight&hide_border=true" alt="Mohammad Ashraf Shaik GitHub Stats" height="175" />
