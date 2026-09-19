@@ -1,9 +1,10 @@
-﻿<h1 align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&pause=1000&color=39D353&center=true&vCenter=true&width=700&lines=Hi+there%2C+I'm+Mohammad+Ashraf+Shaik+%F0%9F%91%8B" alt="Typing SVG" />
+<h1 align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&pause=1000&color=39D353&center=true&vCenter=true&width=700&lines=Hi+there%2C+I%27m+Mohammad+Ashraf+Shaik" alt="Typing SVG" />
+  <br/>&#x1F44B;
 </h1>
 
 <p align="center">
-  <b>Full-Stack Web Developer 💻 &nbsp;|&nbsp; Problem Solver 🧩 &nbsp;|&nbsp; Competitive Chess Player ♟️</b>
+  <b>Full-Stack Web Developer &#x1F4BB; &nbsp;|&nbsp; Problem Solver &#x1F9E9; &nbsp;|&nbsp; Competitive Chess Player &#x265F;&#xFE0F;</b>
 </p>
 
 <p align="center">
@@ -26,7 +27,7 @@
 
 ---
 
-## 🧩 Live LeetCode Progress & Heatmap
+## <img src="https://unpkg.com/lucide-static@latest/icons/code-2.svg" width="22" height="22"/> Live LeetCode Progress & Heatmap
 
 <p align="center">
   <a href="https://leetcode.com/u/Shaik_mohameed_Ashraf/" target="_blank">
@@ -36,7 +37,7 @@
 
 ---
 
-<h3 align="center">♟️ Live Chess.com Progress & Tracking</h3>
+<h3 align="center"><img src="https://unpkg.com/lucide-static@latest/icons/crown.svg" width="20" height="20"/> Live Chess.com Progress &amp; Tracking</h3>
 
 <p align="center">
   <a href="https://www.chess.com/member/ashumm" target="_blank">
@@ -58,7 +59,7 @@
 
 <p align="center">
   <a href="https://mohammed-ashraf-shaik.github.io/Mohammed-Ashraf-Shaik/" target="_blank">
-    <img src="https://img.shields.io/badge/🎮_Live_Interactive_Dashboard-Scroll_Waves_%26_Mouse_Hover_Tooltips-81b64c?style=for-the-badge&logo=chess.com&logoColor=white" alt="Interactive Dashboard" />
+    <img src="https://img.shields.io/badge/&#x1F3AE;_Live_Interactive_Dashboard-Scroll_Waves_%26_Mouse_Hover_Tooltips-81b64c?style=for-the-badge&logo=chess.com&logoColor=white" alt="Interactive Dashboard" />
   </a>
 </p>
 
@@ -70,20 +71,20 @@
 
 ---
 
-## 🚀 Featured Projects
+## <img src="https://unpkg.com/lucide-static@latest/icons/rocket.svg" width="22" height="22"/> Featured Projects
 
 | Project | Tech Stack | Description | Links |
 | :--- | :--- | :--- | :--- |
-| **🏥 SmartCare** | Vite, ES Modules, Modular CSS | Next-gen hospital operating system: patient queue tokens, doctor workspace, and ambulance dispatch. | [Code](https://github.com/Mohammed-Ashraf-Shaik/smart-care-app) |
-| **💳 Razorpay UI Clone** | HTML5, CSS3, JavaScript | Full-fidelity fintech landing page with multi-tier mega menus, 3D hero visual, and banking suites. | [Code](https://github.com/Mohammed-Ashraf-Shaik/razor) |
-| **🛒 Flipkart Web Clone** | HTML5, CSS3, FontAwesome | Feature-rich e-commerce clone featuring product category carousel, deals grid, and responsive layout. | [Code](https://github.com/Mohammed-Ashraf-Shaik/my_1_project) |
-| **🧭 Pro Speed Tracker** | HTML5 Canvas, Geolocation API | High-precision real-time GPS speedometer & HUD with analog dial gauge and 10-language support. | [Code](https://github.com/Mohammed-Ashraf-Shaik/web2) |
-| **🌐 Interactive 3D Portfolio** | JavaScript, 3D Canvas, CSS | Interactive 3D Cyber-Quantum Portfolio & Spatial Inventory. | [Code](https://github.com/Mohammed-Ashraf-Shaik/MYPORTFOLIO) |
-| **🧩 LeetCode Practice** | C++, DSA, LeetHub | Continually updated repository of algorithmic problem solutions and data structures. | [Code](https://github.com/Mohammed-Ashraf-Shaik/myleetcode) |
+| **&#x1F3E5; SmartCare** | Vite, ES Modules, Modular CSS | Next-gen hospital operating system: patient queue tokens, doctor workspace, and ambulance dispatch. | [Code](https://github.com/Mohammed-Ashraf-Shaik/smart-care-app) |
+| **&#x1F4B3; Razorpay UI Clone** | HTML5, CSS3, JavaScript | Full-fidelity fintech landing page with multi-tier mega menus, 3D hero visual, and banking suites. | [Code](https://github.com/Mohammed-Ashraf-Shaik/razor) |
+| **&#x1F6D2; Flipkart Web Clone** | HTML5, CSS3, FontAwesome | Feature-rich e-commerce clone featuring product category carousel, deals grid, and responsive layout. | [Code](https://github.com/Mohammed-Ashraf-Shaik/my_1_project) |
+| **&#x1F9ED; Pro Speed Tracker** | HTML5 Canvas, Geolocation API | High-precision real-time GPS speedometer & HUD with analog dial gauge and 10-language support. | [Code](https://github.com/Mohammed-Ashraf-Shaik/web2) |
+| **&#x1F310; Interactive 3D Portfolio** | JavaScript, 3D Canvas, CSS | Interactive 3D Cyber-Quantum Portfolio & Spatial Inventory. | [Code](https://github.com/Mohammed-Ashraf-Shaik/MYPORTFOLIO) |
+| **&#x1F9E9; LeetCode Practice** | C++, DSA, LeetHub | Continually updated repository of algorithmic problem solutions and data structures. | [Code](https://github.com/Mohammed-Ashraf-Shaik/myleetcode) |
 
 ---
 
-## 🛠️ Languages & Technologies
+## <img src="https://unpkg.com/lucide-static@latest/icons/wrench.svg" width="22" height="22"/> Languages &amp; Technologies
 
 <p align="center">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
@@ -99,19 +100,19 @@
 
 ---
 
-<h3 align="center">🤖 I vibe with</h3>
+<h3 align="center"><img src="https://unpkg.com/lucide-static@latest/icons/bot.svg" width="20" height="20"/> I vibe with</h3>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Antigravity-0D1117?style=for-the-badge&logo=google&logoColor=white" alt="Antigravity" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini" />
   &nbsp;
   <img src="https://img.shields.io/badge/ChatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white" alt="ChatGPT" />
 </p>
 
 ---
 
-## 📈 GitHub Activity & Stats
+## <img src="https://unpkg.com/lucide-static@latest/icons/bar-chart-2.svg" width="22" height="22"/> GitHub Activity &amp; Stats
 
 <p align="center">
   <img src="https://github-readme-stats-fast.vercel.app/api?username=Mohammed-Ashraf-Shaik&show_icons=true&theme=tokyonight&hide_border=true" alt="Mohammad Ashraf Shaik GitHub Stats" height="175" />
@@ -125,14 +126,14 @@
 
 ---
 
-<h3 align="center">🦇 Watch my contributions get shooted by batman</h3>
+<h3 align="center">&#x1F987; Watch my contributions get shooted by batman</h3>
 
 <p align="center">
-  <img src="commit_buster.gif?v=batman_v2" alt="Watch my contributions get shooted by batman" width="100%" />
+  <img src="commit_buster.gif?v=batman_v3" alt="Watch my contributions get shooted by batman" width="100%" />
 </p>
 
 ---
 
 <p align="center">
-  ⭐️ <i>Designed and maintained by <a href="https://github.com/Mohammed-Ashraf-Shaik">Mohammad Ashraf Shaik</a></i>
+  &#x2B50;&#xFE0F; <i>Designed and maintained by <a href="https://github.com/Mohammed-Ashraf-Shaik">Mohammad Ashraf Shaik</a></i>
 </p>
