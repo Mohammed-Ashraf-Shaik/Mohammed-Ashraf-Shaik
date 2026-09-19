@@ -8,9 +8,9 @@ from PIL import Image, ImageDraw, ImageFont
 # ==================== CONFIGURATION ====================
 WIDTH = 890
 HEIGHT = 270
-FPS = 18
-FRAME_DURATION = 55
-TOTAL_FRAMES = 175
+FPS = 14
+FRAME_DURATION = 70
+TOTAL_FRAMES = 180
 
 # GitHub Dark Theme Colors
 BG_COLOR    = (13, 17, 23)
@@ -262,8 +262,8 @@ def draw_batman(draw, x, y, aim_angle=-math.pi/4, firing=False, recoil=0, run_fr
         draw.line([(bx - 4, chest_y), (bx - 32, y + 2)], fill=CAPE_HIGHLIGHT, width=2)
         draw.line([(bx + 4, chest_y), (bx + 32, y + 2)], fill=CAPE_HIGHLIGHT, width=2)
     elif run_frame > 0:
-        # Flowing back in the wind
-        flutter = (run_frame % 3) * 3
+        # Flowing gently back in the wind
+        flutter = ((run_frame // 2) % 3) * 2
         draw.polygon([
             (bx - 4, chest_y),
             (bx - 24 - flutter, knees_y - 4),
@@ -294,7 +294,7 @@ def draw_batman(draw, x, y, aim_angle=-math.pi/4, firing=False, recoil=0, run_fr
         draw.rounded_rectangle([bx - 13, y - 5, bx - 1, y], radius=2, fill=BOOTS)
         draw.rounded_rectangle([bx + 1, y - 5, bx + 13, y], radius=2, fill=BOOTS)
     elif run_frame > 0:
-        cycle = run_frame % 4
+        cycle = (run_frame // 2) % 4
         if cycle == 0:
             draw.line([(bx - 5, waist_y), (bx - 14, knees_y), (bx - 17, y)], fill=SUIT_MID, width=7)
             draw.line([(bx + 5, waist_y), (bx + 10, knees_y), (bx + 14, y - 2)], fill=SUIT_DARK, width=7)
@@ -486,7 +486,7 @@ def main():
     batarangs = []
     frames = []
 
-    bat_x = 50.0
+    bat_x = 90.0
     run_cycle = 0
 
     print(f"Rendering {TOTAL_FRAMES} frames...")
@@ -550,9 +550,9 @@ def main():
 
         # 6. Batman Movement & Action
         upcoming_targets = [c for c in active_commit_cells if (c[0], c[1]) not in destroyed_cells]
-        is_victory = (f >= 152)
+        is_victory = (f >= 156)
         firing_now = (f in shot_map)
-        recoil = 3 if firing_now else 0
+        recoil = 2 if firing_now else 0
 
         if upcoming_targets:
             cur_target = upcoming_targets[0]
@@ -574,24 +574,33 @@ def main():
             cur_target = active_commit_cells[-1]
             tgt_x, tgt_y = target_coords[(cur_target[0], cur_target[1])]
 
-        # Dynamic positioning of Batman
-        prev_bat_x = bat_x
+        # Dynamic positioning of Batman with smooth walk speed limit
+        MAX_WALK_SPEED = 3.0
         if f < START_SHOOT:
             first_tgt_x = target_coords[(active_commit_cells[0][0], active_commit_cells[0][1])][0]
-            desired_x = max(60, min(first_tgt_x - 65, 710))
-            bat_x = 50.0 + (desired_x - 50.0) * (f / float(START_SHOOT))
-            run_cycle += 1
+            desired_x = max(80, min(first_tgt_x - 65, 680))
+            diff = desired_x - bat_x
+            move = math.copysign(min(abs(diff) * 0.12, MAX_WALK_SPEED), diff)
+            bat_x += move
+            if abs(move) > 0.3:
+                run_cycle += 1
+            else:
+                run_cycle = 0
         elif f <= END_SHOOT:
-            desired_x = max(60, min(tgt_x - 60, 710))
-            bat_x += (desired_x - bat_x) * 0.16
-            if abs(bat_x - prev_bat_x) > 0.4:
+            desired_x = max(80, min(tgt_x - 60, 680))
+            diff = desired_x - bat_x
+            move = math.copysign(min(abs(diff) * 0.12, MAX_WALK_SPEED), diff)
+            bat_x += move
+            if abs(move) > 0.3:
                 run_cycle += 1
             else:
                 run_cycle = 0
         else:
-            # End sequence: walk to victory mark
-            desired_x = min(710, target_coords[(active_commit_cells[-1][0], active_commit_cells[-1][1])][0] - 45)
-            bat_x += (desired_x - bat_x) * 0.10
+            # End sequence: walk calmly to victory mark
+            desired_x = min(680, target_coords[(active_commit_cells[-1][0], active_commit_cells[-1][1])][0] - 45)
+            diff = desired_x - bat_x
+            move = math.copysign(min(abs(diff) * 0.10, MAX_WALK_SPEED * 0.6), diff)
+            bat_x += move
             run_cycle = 0
 
         dx = tgt_x - (bat_x + 4)

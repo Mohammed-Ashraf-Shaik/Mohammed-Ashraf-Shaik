@@ -71,7 +71,7 @@
 ## 🦇 GitHub Contribution Buster // The Dark Knight of Code
 
 <p align="center">
-  <img src="commit_buster.gif?v=dark_knight_crisp" alt="Mohammad Ashraf Shaik - The Dark Knight GitHub Contribution Buster" width="100%" />
+  <img src="commit_buster.gif?v=dark_knight_steady" alt="Mohammad Ashraf Shaik - The Dark Knight GitHub Contribution Buster" width="100%" />
 </p>
 
 ---
