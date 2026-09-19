@@ -513,12 +513,29 @@ def main():
         # 2. Clean Ground Line
         draw.line([(40, GROUND_Y), (WIDTH - 40, GROUND_Y)], fill=(30, 36, 46), width=1)
 
-        # 3. Bottom Gradient Scale (Matching Awaiz snake structure at bottom-left)
-        bar_w = 40
+        # 3. Dynamic Progress Bar — grows left-to-right as contributions are destroyed
+        bar_total_w = 53 * (CELL_SIZE + CELL_GAP) - CELL_GAP  # same width as the contribution grid
         bar_h = 6
         bar_y = GROUND_Y + 14
-        for i, col in enumerate(GREEN_LEVELS[1:]):
-            draw.rounded_rectangle([GRID_X + i * bar_w, bar_y, GRID_X + (i + 1) * bar_w, bar_y + bar_h], radius=2, fill=col)
+        bar_x0 = GRID_X
+
+        # Background track (empty bar)
+        draw.rounded_rectangle([bar_x0, bar_y, bar_x0 + bar_total_w, bar_y + bar_h], radius=3, fill=(22, 27, 34), outline=(33, 38, 45))
+
+        # Filled portion based on how many cells destroyed so far
+        destroyed_count = len(destroyed_cells)
+        if N > 0 and destroyed_count > 0:
+            filled_w = max(6, int(destroyed_count / N * bar_total_w))
+            # Interpolate color: dark green → bright green
+            t = destroyed_count / N  # 0.0 → 1.0
+            r = int(14 + t * (57 - 14))
+            g = int(68 + t * (211 - 68))
+            b = int(41 + t * (83 - 41))
+            bar_fill = (r, g, b)
+            draw.rounded_rectangle([bar_x0, bar_y, bar_x0 + filled_w, bar_y + bar_h], radius=3, fill=bar_fill)
+            # Bright leading edge glow
+            edge_x = bar_x0 + filled_w
+            draw.line([(edge_x - 1, bar_y + 1), (edge_x - 1, bar_y + bar_h - 1)], fill=(0, 255, 136), width=2)
 
         # 6. Batman Movement & Action
         upcoming_targets = [c for c in active_commit_cells if (c[0], c[1]) not in destroyed_cells]

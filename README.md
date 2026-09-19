@@ -1,4 +1,6 @@
-<h1 align="center">Hi there, I'm Mohammad Ashraf Shaik 👋</h1>
+﻿<h1 align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&pause=1000&color=39D353&center=true&vCenter=true&width=700&lines=Hi+there%2C+I'm+Mohammad+Ashraf+Shaik+%F0%9F%91%8B" alt="Typing SVG" />
+</h1>
 
 <p align="center">
   <b>Full-Stack Web Developer 💻 &nbsp;|&nbsp; Problem Solver 🧩 &nbsp;|&nbsp; Competitive Chess Player ♟️</b>
@@ -34,7 +36,7 @@
 
 ---
 
-## ♟️ Live Chess.com Progress & Tracking
+<h3 align="center">♟️ Live Chess.com Progress & Tracking</h3>
 
 <p align="center">
   <a href="https://www.chess.com/member/ashumm" target="_blank">
@@ -68,14 +70,6 @@
 
 ---
 
-<h3 align="center">🦇 Watch my contributions get shooted by batman</h3>
-
-<p align="center">
-  <img src="commit_buster.gif?v=batman_shooted" alt="Watch my contributions get shooted by batman" width="100%" />
-</p>
-
----
-
 ## 🚀 Featured Projects
 
 | Project | Tech Stack | Description | Links |
@@ -105,6 +99,18 @@
 
 ---
 
+<h3 align="center">🤖 I vibe with</h3>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Antigravity-0D1117?style=for-the-badge&logo=google&logoColor=white" alt="Antigravity" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/ChatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white" alt="ChatGPT" />
+</p>
+
+---
+
 ## 📈 GitHub Activity & Stats
 
 <p align="center">
@@ -115,6 +121,14 @@
 
 <p align="center">
   <img src="https://streak-stats.demolab.com/?user=Mohammed-Ashraf-Shaik&theme=tokyonight&hide_border=true" alt="GitHub Streak Stats" />
+</p>
+
+---
+
+<h3 align="center">🦇 Watch my contributions get shooted by batman</h3>
+
+<p align="center">
+  <img src="commit_buster.gif?v=batman_v2" alt="Watch my contributions get shooted by batman" width="100%" />
 </p>
 
 ---
