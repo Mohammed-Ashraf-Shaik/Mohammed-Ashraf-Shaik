@@ -36,34 +36,43 @@ def generate_name_gif(output_path='name_animation.gif'):
     GREEN = (57, 211, 83)      # #39d353
     WHITE = (255, 255, 255)    # pure white for M and A
 
-    frames = []
-    blank_img = Image.new('RGB', (WIDTH, HEIGHT), BG_COLOR)
-    frames.append(blank_img)
-
-    # Type letter by letter
-    for count in range(1, len(text) + 1):
+    # Pre-render a frame for each character count from 0 to len(text)
+    rendered_cache = {}
+    for count in range(len(text) + 1):
         img = Image.new('RGB', (WIDTH, HEIGHT), BG_COLOR)
         draw = ImageDraw.Draw(img)
         for i in range(count):
             ch = text[i]
             col = WHITE if i in (m_idx, a_idx) else GREEN
             draw.text((start_x + i * char_w, y), ch, fill=col, font=font)
-        frames.append(img)
+        rendered_cache[count] = img
 
-    # Hold complete text for 22 frames (22 * 75ms = ~1.65 seconds)
-    full_img = frames[-1]
-    for _ in range(22):
-        frames.append(full_img)
+    frames = []
+    durations = []
 
-    # Blank pause at end before looping (4 frames * 75ms = 0.3s)
-    for _ in range(4):
-        frames.append(blank_img)
+    # 1. Initial pause on empty (350ms)
+    frames.append(rendered_cache[0])
+    durations.append(350)
+
+    # 2. Type forward letter-by-letter (70ms per char)
+    for count in range(1, len(text)):
+        frames.append(rendered_cache[count])
+        durations.append(70)
+
+    # 3. Full text displayed: hold for 1800ms so the user can comfortably read it
+    frames.append(rendered_cache[len(text)])
+    durations.append(1800)
+
+    # 4. Reverse backspace: delete letter-by-letter back to empty (40ms per char)
+    for count in range(len(text) - 1, -1, -1):
+        frames.append(rendered_cache[count])
+        durations.append(40)
 
     frames[0].save(
         output_path,
         save_all=True,
         append_images=frames[1:],
-        duration=75,
+        duration=durations,
         loop=0,
         optimize=True
     )
