@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ==================== CONFIGURATION ====================
 WIDTH = 890
-HEIGHT = 270
+HEIGHT = 210
 FPS = 14
 FRAME_DURATION = 70
 TOTAL_FRAMES = 180
@@ -451,12 +451,12 @@ def main():
     N = len(active_commit_cells)
     print(f"Batman will target and CLEAR ALL {N} active contributions!")
 
-    # Layout dimensions matching clean GitHub cards
+    # Layout dimensions matching clean seamless widget (like Awaiz snake)
     CELL_SIZE = 10
     CELL_GAP  = 3
-    GRID_X    = 64
-    GRID_Y    = 62
-    GROUND_Y  = 238
+    GRID_X    = (WIDTH - (53 * (CELL_SIZE + CELL_GAP) - CELL_GAP)) // 2  # 102 (centered)
+    GRID_Y    = 24
+    GROUND_Y  = 176
 
     def get_cell_coord(w, d):
         cx = GRID_X + w * (CELL_SIZE + CELL_GAP) + CELL_SIZE // 2
@@ -465,12 +465,9 @@ def main():
 
     target_coords = {(w, d): get_cell_coord(w, d) for w, d, lvl in active_commit_cells}
 
-    MONTH_NAMES = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"]
-    day_map = [("Mon", 1), ("Wed", 3), ("Fri", 5)]
-
     # Schedule shots for ALL N active contributions with comfortable pacing
     START_SHOOT = 16
-    END_SHOOT = 145
+    END_SHOOT = 150
     shot_map = {}
     hit_map = {}
     for i in range(N):
@@ -486,42 +483,19 @@ def main():
     batarangs = []
     frames = []
 
-    bat_x = 90.0
+    bat_x = 130.0
     run_cycle = 0
 
     print(f"Rendering {TOTAL_FRAMES} frames...")
     for f in range(TOTAL_FRAMES):
-        # Zero screen shake: rock solid clarity so the user clearly sees each box hit
+        # Zero screen shake: rock solid clarity
         shake_x = 0
         shake_y = 0
 
         img = Image.new("RGB", (WIDTH, HEIGHT), BG_COLOR)
         draw = ImageDraw.Draw(img)
 
-        # 1. Outer Card Border
-        draw.rounded_rectangle([2, 2, WIDTH - 3, HEIGHT - 3], radius=12, fill=BG_COLOR, outline=CARD_BORDER, width=1)
-
-        # 2. CLEAN GITHUB HEADER (No arcade HUD, no scores, no badges!)
-        draw.text((22, 16), "Mohammed-Ashraf-Shaik / Contributions", fill=WHITE, font=FONT_HEADER)
-        remaining = max(0, total_active_count - len(destroyed_cells))
-        if remaining > 0:
-            draw.text((22, 33), f"{remaining} of {total_active_count} contributions remaining  •  The Dark Knight of Code", fill=MUTED, font=FONT_SUB)
-        else:
-            draw.text((22, 33), f"All {total_active_count} contributions cleared  •  The Dark Knight of Code", fill=HOT_GREEN, font=FONT_SUB)
-
-        draw.line([(15, 48), (WIDTH - 15, 48)], fill=HEADER_LINE, width=1)
-
-        # 3. Month Labels
-        for mi, mname in enumerate(MONTH_NAMES):
-            col_x = GRID_X + mi * int(53 / 12 * (CELL_SIZE + CELL_GAP))
-            draw.text((col_x, GRID_Y - 13), mname, fill=MUTED, font=FONT_LABEL)
-
-        # Day Labels (Mon, Wed, Fri)
-        for dname, drow in day_map:
-            dy = GRID_Y + drow * (CELL_SIZE + CELL_GAP) + 1
-            draw.text((GRID_X - 28, dy), dname, fill=MUTED, font=FONT_LABEL)
-
-        # 4. EXACT REAL CONTRIBUTION GRID (2D mapped: Row d, Col w)
+        # 1. EXACT REAL CONTRIBUTION GRID (Seamless, centered, NO card borders, NO extra words)
         for d in range(7):
             for w in range(len(active_grid[d])):
                 cx = GRID_X + w * (CELL_SIZE + CELL_GAP)
@@ -536,17 +510,15 @@ def main():
                     outl = EMPTY_BORDER if lvl == 0 else col
                     draw.rounded_rectangle([cx, cy, cx + CELL_SIZE, cy + CELL_SIZE], radius=2, fill=col, outline=outl)
 
-        # 5. Clean Cyber Ground Line
-        draw.line([(15, GROUND_Y), (WIDTH - 15, GROUND_Y)], fill=(30, 36, 46), width=1)
+        # 2. Clean Ground Line
+        draw.line([(40, GROUND_Y), (WIDTH - 40, GROUND_Y)], fill=(30, 36, 46), width=1)
 
-        # Clean Legend (Exact GitHub style)
-        leg_x = WIDTH - 215
-        leg_y = GROUND_Y + 14
-        draw.text((leg_x - 30, leg_y), "Less", fill=MUTED, font=FONT_LABEL)
-        for li in range(5):
-            lx = leg_x + li * 14
-            draw.rounded_rectangle([lx, leg_y, lx + 10, leg_y + 10], radius=2, fill=GREEN_LEVELS[li])
-        draw.text((leg_x + 5 * 14 + 6, leg_y), "More", fill=MUTED, font=FONT_LABEL)
+        # 3. Bottom Gradient Scale (Matching Awaiz snake structure at bottom-left)
+        bar_w = 40
+        bar_h = 6
+        bar_y = GROUND_Y + 14
+        for i, col in enumerate(GREEN_LEVELS[1:]):
+            draw.rounded_rectangle([GRID_X + i * bar_w, bar_y, GRID_X + (i + 1) * bar_w, bar_y + bar_h], radius=2, fill=col)
 
         # 6. Batman Movement & Action
         upcoming_targets = [c for c in active_commit_cells if (c[0], c[1]) not in destroyed_cells]
@@ -578,7 +550,7 @@ def main():
         MAX_WALK_SPEED = 3.0
         if f < START_SHOOT:
             first_tgt_x = target_coords[(active_commit_cells[0][0], active_commit_cells[0][1])][0]
-            desired_x = max(80, min(first_tgt_x - 65, 680))
+            desired_x = max(110, min(first_tgt_x - 65, 730))
             diff = desired_x - bat_x
             move = math.copysign(min(abs(diff) * 0.12, MAX_WALK_SPEED), diff)
             bat_x += move
@@ -587,7 +559,7 @@ def main():
             else:
                 run_cycle = 0
         elif f <= END_SHOOT:
-            desired_x = max(80, min(tgt_x - 60, 680))
+            desired_x = max(110, min(tgt_x - 60, 730))
             diff = desired_x - bat_x
             move = math.copysign(min(abs(diff) * 0.12, MAX_WALK_SPEED), diff)
             bat_x += move
@@ -597,7 +569,7 @@ def main():
                 run_cycle = 0
         else:
             # End sequence: walk calmly to victory mark
-            desired_x = min(680, target_coords[(active_commit_cells[-1][0], active_commit_cells[-1][1])][0] - 45)
+            desired_x = min(730, target_coords[(active_commit_cells[-1][0], active_commit_cells[-1][1])][0] - 40)
             diff = desired_x - bat_x
             move = math.copysign(min(abs(diff) * 0.10, MAX_WALK_SPEED * 0.6), diff)
             bat_x += move
