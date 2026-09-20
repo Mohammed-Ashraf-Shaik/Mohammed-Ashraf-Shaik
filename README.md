@@ -75,6 +75,7 @@
 
 | Project | Tech Stack | Description | Links |
 | :--- | :--- | :--- | :--- |
+| **&#x1F3A7; SonicAM (Anything to Audio)** | FastAPI, Python, Shazamio, React Native, Expo | Advanced acoustic landmark music recognition platform: detects songs from links, media files & live mic with native Android APK. | [Live Demo](https://mohammed-ashraf-shaik-sonicam.hf.space) \| [Code](https://github.com/Mohammed-Ashraf-Shaik/anything-to-audio) \| [Android APK](https://github.com/Mohammed-Ashraf-Shaik/anything-to-audio/releases/latest/download/SonicAM.apk) |
 | **&#x1F3E5; SmartCare** | Vite, ES Modules, Modular CSS | Next-gen hospital operating system: patient queue tokens, doctor workspace, and ambulance dispatch. | [Live Demo](https://smartcare-gprec.vercel.app) \| [Code](https://github.com/Mohammed-Ashraf-Shaik/smart-care-app) |
 | **&#x1F4B3; Razorpay UI Clone** | HTML5, CSS3, JavaScript | Full-fidelity fintech landing page with multi-tier mega menus, 3D hero visual, and banking suites. | [Code](https://github.com/Mohammed-Ashraf-Shaik/razor) |
 | **&#x1F6D2; Flipkart Web Clone** | HTML5, CSS3, FontAwesome | Feature-rich e-commerce clone featuring product category carousel, deals grid, and responsive layout. | [Code](https://github.com/Mohammed-Ashraf-Shaik/my_1_project) |
